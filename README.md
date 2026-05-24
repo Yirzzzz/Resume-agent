@@ -2,7 +2,7 @@
 
 一个低门槛的 Web 简历 Agent 平台：支持多简历文件管理、结构化编辑、实时 PDF 预览与导出。
 
-![8e95f37028ce6b672bc0f606d33be84a](/Users/yirz/PyCharmProject/resume/assets/8e95f37028ce6b672bc0f606d33be84a.jpg)
+![8e95f37028ce6b672bc0f606d33be84a](./assets/8e95f37028ce6b672bc0f606d33be84a.jpg)
 
 ## ✨ 功能亮点
 - 🧩 模块化编辑：工作/项目/科研/教育等模块可增删、排序、自定义
