@@ -603,36 +603,6 @@ export function ResumeForm({ apiBaseUrl, templates }: { apiBaseUrl: string; temp
     return () => clearTimeout(timer);
   }, [bootstrapFiles]);
 
-  function estimateDensityScore() {
-    const textLen = JSON.stringify(resumePayload).length;
-    const itemCount = enabledSections.reduce((n, s) => n + s.items.length, 0);
-    return textLen + itemCount * 240;
-  }
-
-  function handleSmartOnePage() {
-    const score = estimateDensityScore();
-    if (score > 6200)
-      return setLayout((v) => ({
-        ...v,
-        pageMarginMm: 9,
-        bodyFontSizePt: 9.2,
-        lineHeight: 1.2,
-      }));
-    if (score > 4500)
-      return setLayout((v) => ({
-        ...v,
-        pageMarginMm: 11,
-        bodyFontSizePt: 9.8,
-        lineHeight: 1.3,
-      }));
-    return setLayout((v) => ({
-      ...v,
-      pageMarginMm: 14,
-      bodyFontSizePt: 10.5,
-      lineHeight: 1.45,
-    }));
-  }
-
   function updateSection(sectionId: string, patch: Partial<Section>) {
     setSections((prev) => prev.map((s) => (s.id === sectionId ? { ...s, ...patch } : s)));
   }
@@ -1145,9 +1115,6 @@ export function ResumeForm({ apiBaseUrl, templates }: { apiBaseUrl: string; temp
               disabled={loading || fileLoading || previewLoading || !activeFileId}
             >
               保存并预览
-            </button>
-            <button className="comic-btn burst" type="button" onClick={handleSmartOnePage}>
-              智能一页
             </button>
           </div>
         </div>

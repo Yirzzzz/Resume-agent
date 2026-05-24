@@ -1,4 +1,4 @@
-import { ResumeForm } from '@/components/resume-form';
+import { WorkspaceTabs } from '@/components/workspace-tabs';
 
 type Template = {
   id: string;
@@ -27,7 +27,7 @@ export default async function Home() {
           <h1 className="comic-hero-main">Resume Agent</h1>
         </div>
       </div>
-      <ResumeForm apiBaseUrl={baseUrl} templates={templates} />
+      <WorkspaceTabs apiBaseUrl={baseUrl} templates={templates} />
     </main>
   );
 }
