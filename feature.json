@@ -148,6 +148,9 @@
     "milestone": "M1",
     "feature": "F-103",
     "next_actions": [
+      "重写 README（中文版 + emoji + 快速部署流程）",
+      "移除首页标题中的 Panel Dynamics / Breaking the Fourth Wall 与横线",
+      "首页 Resume Agent 标题改为 Panel Dynamics / Breaking the Fourth Wall 同款漫画分格标题样式",
       "新增根 .gitignore 与 data 示例文件，支持安全上传 GitHub",
       "移除首页文案：左侧编辑，右侧实时 PDF 预览",
       "新增模块无标题时不显示默认“条目”文案，空则不显示",

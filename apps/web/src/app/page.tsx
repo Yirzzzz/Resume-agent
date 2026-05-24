@@ -22,8 +22,10 @@ export default async function Home() {
 
   return (
     <main className="min-h-screen w-full p-3 lg:p-4">
-      <div className="mb-3">
-        <h1 className="comic-hero">Resume Agent</h1>
+      <div className="mb-4 comic-hero-wall">
+        <div className="comic-hero-panel">
+          <h1 className="comic-hero-main">Resume Agent</h1>
+        </div>
       </div>
       <ResumeForm apiBaseUrl={baseUrl} templates={templates} />
     </main>
