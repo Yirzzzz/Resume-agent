@@ -75,18 +75,3 @@ docker compose logs -f
 ```
 
 > 说明：如果仓库中暂未提供 `docker-compose.yml`，可先按“本地开发”方式运行，再补充容器化配置。
-
-## ☁️ GitHub 发布最小清单
-仓库已配置根 `.gitignore`，默认不提交：缓存文件、构建产物、IDE 配置、过程文档、本地真实数据。
-
-建议发布前检查：
-- ✅ `data/resume-files.example.json` 在仓库中
-- ✅ `data/resume-files.json` 不在仓库中
-- ✅ `node_modules/.next/.idea` 等未被提交
-
-## 📌 协作说明
-- `feature.json`：需求与任务状态
-- `progress.md`：会话进度与关键决策（本地协作用，可按需入库）
-
-## 📄 License
-当前仓库未声明开源许可证。若要开源，建议补充 `MIT` 或 `Apache-2.0`。
