@@ -57,6 +57,7 @@ pnpm lint
 ```
 
 ## 🐳 快速部署（Docker）
+
 如果你准备做私有化部署，建议使用 `Docker Compose` 统一编排（Web + API）。
 
 ### 1) 构建镜像
@@ -75,3 +76,9 @@ docker compose logs -f
 ```
 
 > 说明：如果仓库中暂未提供 `docker-compose.yml`，可先按“本地开发”方式运行，再补充容器化配置。
+
+
+
+## 🔗 友链链接
+
+非常感谢linux do社区提供的交流平台：https://linux.do/latest
