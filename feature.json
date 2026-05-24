@@ -148,6 +148,10 @@
     "milestone": "M1",
     "feature": "F-103",
     "next_actions": [
+      "联系方式图标改用 Emoji（邮箱/电话/位置）",
+      "统一联系方式与附加信息行距，固定图标行高避免 emoji 撑高",
+      "角色档案联系方式图标改为 SVG 图标（非 emoji/字符）",
+      "加粗 PDF 模块标题分割水平线",
       "重写 README（中文版 + emoji + 快速部署流程）",
       "移除首页标题中的 Panel Dynamics / Breaking the Fourth Wall 与横线",
       "首页 Resume Agent 标题改为 Panel Dynamics / Breaking the Fourth Wall 同款漫画分格标题样式",

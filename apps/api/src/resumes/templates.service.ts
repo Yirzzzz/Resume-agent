@@ -86,6 +86,11 @@ export class TemplatesService {
       out = out.replace(/\*(.+?)\*/g, '<em>$1</em>');
       return out;
     };
+    const contactEmoji = (kind: 'email' | 'phone' | 'location') => {
+      if (kind === 'email') return '📧';
+      if (kind === 'phone') return '📱';
+      return '📍';
+    };
 
     const sectionBlock = (
       title: string,
@@ -288,14 +293,14 @@ export class TemplatesService {
       return '⭐';
     };
     const headerMetaItems = [
-      { icon: '✉', value: resume.basics.email },
-      { icon: '☎', value: resume.basics.phone ?? '' },
-      { icon: '⌂', value: resume.basics.location ?? '' },
+      { icon: contactEmoji('email'), value: resume.basics.email },
+      { icon: contactEmoji('phone'), value: resume.basics.phone ?? '' },
+      { icon: contactEmoji('location'), value: resume.basics.location ?? '' },
     ]
       .filter((item) => String(item.value ?? '').trim())
       .map(
         (item) =>
-          `<span class="meta-item"><span class="meta-icon">${item.icon}</span><span>${escapeHtml(String(item.value))}</span></span>`,
+          `<span class="meta-item"><span class="meta-icon">${item.icon}</span><span class="meta-text">${escapeHtml(String(item.value))}</span></span>`,
       )
       .join('');
     const headerExtraItems = (resume.basics.extraInfos ?? [])
@@ -307,7 +312,7 @@ export class TemplatesService {
       .filter((item) => item.label && item.value)
       .map((item) => {
         const icon = item.icon || iconFromLabel(item.label);
-        return `<span class="meta-item"><span class="meta-icon">${escapeHtml(icon)}</span><span>${escapeHtml(item.label)}：${escapeHtml(item.value)}</span></span>`;
+        return `<span class="meta-item"><span class="meta-icon">${escapeHtml(icon)}</span><span class="meta-text">${escapeHtml(item.label)}：${escapeHtml(item.value)}</span></span>`;
       })
       .join('');
     const normalizedPhoto = String(resume.basics.photo ?? '').trim();
@@ -324,6 +329,6 @@ export class TemplatesService {
     const trailingSections = customSections || legacyRows;
     const bodySections = `${legacyEducationBlock}${trailingSections}`;
 
-    return `<!doctype html><html><head><meta charset="utf-8" /><title>${escapeHtml(resume.basics.name)} - Resume</title><style>@page{size:A4;margin:${pageMargin}}body{font-family:${fontFamily};color:${t.tokens.textColor};font-size:${bodyFontSize};line-height:${lineHeight}}h1{margin:0;color:${accentColor};font-size:20pt}h2{margin:14px 0 8px;border-bottom:1px solid #e5e7eb;color:${accentColor};font-size:12pt}.header{margin-bottom:10px}.header-main{display:flex;justify-content:space-between;align-items:flex-start;gap:14px}.header-info{min-width:0;flex:1 1 auto}.meta{color:#4b5563;font-size:9.5pt;margin-top:4px;display:flex;flex-wrap:wrap;gap:10px 14px}.meta-extra{margin-top:6px}.meta-item{display:inline-flex;align-items:center;gap:5px}.meta-icon{font-size:9pt;line-height:1}.avatar-wrap{flex:0 0 auto;border:1px solid #d1d5db;padding:2px;background:#fff}.avatar{width:78px;height:104px;object-fit:cover;display:block}.summary{margin-top:8px}.block{margin-bottom:8px}.row{display:flex;justify-content:space-between;align-items:flex-start;gap:12px}.head{min-width:0;flex:1 1 auto}.time{flex:0 0 auto;white-space:nowrap;color:#4b5563}.edu-school{font-weight:700}.edu-meta{font-weight:400}.exp-company{font-weight:700}.exp-role{font-weight:400}.proj-name{font-weight:700}.proj-org{font-weight:400}.muted{color:#6b7280}ul{margin:6px 0 0 16px;padding:0}li{margin:2px 0}.line-block{margin-top:6px}.line-item{margin:2px 0}</style></head><body><div class="header"><div class="header-main"><div class="header-info"><h1>${escapeHtml(resume.basics.name)}</h1><div class="meta">${headerMetaItems}</div>${headerExtraItems ? `<div class="meta meta-extra">${headerExtraItems}</div>` : ''}${resume.basics.summary ? `<div class="summary">${formatInline(resume.basics.summary)}</div>` : ''}</div>${headerPhoto}</div></div>${bodySections}${skills ? `<h2>${titles.skills}</h2><div>${formatInline(skills)}</div>` : ''}</body></html>`;
+    return `<!doctype html><html><head><meta charset="utf-8" /><title>${escapeHtml(resume.basics.name)} - Resume</title><style>@page{size:A4;margin:${pageMargin}}body{font-family:${fontFamily};color:${t.tokens.textColor};font-size:${bodyFontSize};line-height:${lineHeight}}h1{margin:0;color:${accentColor};font-size:20pt}h2{margin:14px 0 8px;border-bottom:1px solid #000;color:${accentColor};font-size:12pt}.header{margin-bottom:10px}.header-main{display:flex;justify-content:space-between;align-items:flex-start;gap:14px}.header-info{min-width:0;flex:1 1 auto}.meta{color:#000;font-size:9.5pt;line-height:16px;margin-top:4px;display:flex;flex-wrap:wrap;align-items:center;column-gap:14px;row-gap:4px}.meta-extra{margin-top:4px}.meta-item{display:inline-flex;align-items:center;height:16px;line-height:16px;gap:5px}.meta-text{display:inline-block;line-height:16px}.meta-icon{width:14px;min-width:14px;height:14px;display:inline-flex;align-items:center;justify-content:center;font-family:Apple Color Emoji,Segoe UI Emoji,Noto Color Emoji,sans-serif;font-size:11px;line-height:14px;vertical-align:middle}.avatar-wrap{flex:0 0 auto;border:1px solid #d1d5db;padding:2px;background:#fff}.avatar{width:78px;height:104px;object-fit:cover;display:block}.summary{margin-top:8px}.block{margin-bottom:8px}.row{display:flex;justify-content:space-between;align-items:flex-start;gap:12px}.head{min-width:0;flex:1 1 auto}.time{flex:0 0 auto;white-space:nowrap;color:#000}.edu-school{font-weight:700}.edu-meta{font-weight:400}.exp-company{font-weight:700}.exp-role{font-weight:400}.proj-name{font-weight:700}.proj-org{font-weight:400}.muted{color:#000}ul{margin:6px 0 0 16px;padding:0}li{margin:2px 0}.line-block{margin-top:6px}.line-item{margin:2px 0}</style></head><body><div class="header"><div class="header-main"><div class="header-info"><h1>${escapeHtml(resume.basics.name)}</h1><div class="meta">${headerMetaItems}</div>${headerExtraItems ? `<div class="meta meta-extra">${headerExtraItems}</div>` : ''}${resume.basics.summary ? `<div class="summary">${formatInline(resume.basics.summary)}</div>` : ''}</div>${headerPhoto}</div></div>${bodySections}${skills ? `<h2>${titles.skills}</h2><div>${formatInline(skills)}</div>` : ''}</body></html>`;
   }
 }
