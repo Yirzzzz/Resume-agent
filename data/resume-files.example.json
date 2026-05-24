@@ -1,0 +1,74 @@
+{
+  "version": 2,
+  "files": [
+    {
+      "id": "rf_example001",
+      "name": "默认简历",
+      "isDefault": true,
+      "createdAt": "2026-01-01T00:00:00.000Z",
+      "updatedAt": "2026-01-01T00:00:00.000Z",
+      "data": {
+        "basics": {
+          "name": "你的姓名",
+          "email": "you@example.com",
+          "phone": "13800000000",
+          "location": "上海",
+          "summary": "在这里写你的个人简介，突出方向与成果。",
+          "extraInfos": [
+            {
+              "label": "求职状态",
+              "value": "在职-月内到岗",
+              "icon": "💼"
+            }
+          ]
+        },
+        "education": [],
+        "customSections": [
+          {
+            "title": "工作/实习经历",
+            "items": [
+              {
+                "title": "前端工程师",
+                "org": "某科技公司",
+                "period": "2022-07 ~ 至今",
+                "highlights": [
+                  "负责核心页面重构",
+                  "首屏性能提升 40%",
+                  "沉淀组件库规范"
+                ]
+              }
+            ]
+          }
+        ],
+        "skills": [
+          "TypeScript",
+          "React",
+          "Next.js"
+        ]
+      },
+      "config": {
+        "templateId": "modern-cn-001",
+        "layout": {
+          "pageMarginMm": 14,
+          "bodyFontSizePt": 10.5,
+          "lineHeight": 1.45,
+          "accentColor": "#1f4f8f",
+          "fontFamily": "Microsoft YaHei, PingFang SC, sans-serif",
+          "sectionTitles": {
+            "skills": "技能"
+          }
+        }
+      }
+    }
+  ],
+  "sharedProfile": {
+    "basics": {
+      "name": "你的姓名",
+      "email": "you@example.com",
+      "phone": "13800000000",
+      "location": "上海",
+      "summary": "在这里写你的个人简介，突出方向与成果。"
+    },
+    "education": []
+  }
+}

@@ -1,0 +1,176 @@
+{
+  "project": {
+    "name": "resume-agent",
+    "status": "in_progress",
+    "owner": "yirz",
+    "created_at": "2026-05-24",
+    "last_updated": "2026-05-24"
+  },
+  "vision": "构建低门槛、可 Web 使用的简历 Agent 平台，具备多模板、智能一页、内容润色与模拟面试能力。",
+  "principles": [
+    "大众化：无需本地复杂安装即可使用",
+    "可控：AI 输出结构化、可审计、可回退",
+    "高可用：导出稳定、模板一致",
+    "可扩展：模板与 Agent 能力解耦"
+  ],
+  "epics": [
+    {
+      "id": "EPIC-1",
+      "name": "Core Resume Builder",
+      "priority": "P0",
+      "features": [
+        {
+          "id": "F-101",
+          "name": "账号与简历基础信息",
+          "status": "in_progress"
+        },
+        {
+          "id": "F-102",
+          "name": "结构化简历编辑器（表单 + 区块）",
+          "status": "in_progress"
+        },
+        {
+          "id": "F-103",
+          "name": "HTML/PDF 渲染导出",
+          "status": "todo"
+        }
+      ]
+    },
+    {
+      "id": "EPIC-2",
+      "name": "Template System",
+      "priority": "P0",
+      "features": [
+        {
+          "id": "F-201",
+          "name": "模板 DSL（布局 + 主题变量）",
+          "status": "todo"
+        },
+        {
+          "id": "F-202",
+          "name": "首批 8-12 套模板",
+          "status": "todo"
+        }
+      ]
+    },
+    {
+      "id": "EPIC-3",
+      "name": "Smart Layout",
+      "priority": "P1",
+      "features": [
+        {
+          "id": "F-301",
+          "name": "智能一页（Auto Fit One Page）",
+          "status": "todo"
+        },
+        {
+          "id": "F-302",
+          "name": "字体/颜色/页边距自动优化",
+          "status": "todo"
+        }
+      ]
+    },
+    {
+      "id": "EPIC-4",
+      "name": "Agent Capabilities",
+      "priority": "P1",
+      "features": [
+        {
+          "id": "F-401",
+          "name": "简历润色与量化改写",
+          "status": "todo"
+        },
+        {
+          "id": "F-402",
+          "name": "JD 匹配评分与缺口分析",
+          "status": "todo"
+        },
+        {
+          "id": "F-403",
+          "name": "模拟面试（问答 + 追问 + 反馈）",
+          "status": "todo"
+        }
+      ]
+    },
+    {
+      "id": "EPIC-5",
+      "name": "Delivery & Ops",
+      "priority": "P0",
+      "features": [
+        {
+          "id": "F-501",
+          "name": "SaaS 一键部署",
+          "status": "todo"
+        },
+        {
+          "id": "F-502",
+          "name": "Docker Compose 私有部署",
+          "status": "todo"
+        }
+      ]
+    }
+  ],
+  "milestones": [
+    {
+      "id": "M1",
+      "name": "MVP",
+      "target": "2-4周",
+      "scope": [
+        "F-101",
+        "F-102",
+        "F-103",
+        "F-201 (v1)"
+      ]
+    },
+    {
+      "id": "M2",
+      "name": "Template + Smart Layout",
+      "target": "4-8周",
+      "scope": [
+        "F-202",
+        "F-301",
+        "F-302",
+        "F-402"
+      ]
+    },
+    {
+      "id": "M3",
+      "name": "Advanced Agent",
+      "target": "8-12周",
+      "scope": [
+        "F-401",
+        "F-403",
+        "F-502"
+      ]
+    }
+  ],
+  "current_focus": {
+    "milestone": "M1",
+    "feature": "F-103",
+    "next_actions": [
+      "新增根 .gitignore 与 data 示例文件，支持安全上传 GitHub",
+      "移除首页文案：左侧编辑，右侧实时 PDF 预览",
+      "新增模块无标题时不显示默认“条目”文案，空则不显示",
+      "新增模块支持无标题显示：有内容即显示，且换行按分行文本渲染",
+      "移除头像预览黑色边框显示",
+      "提升 API body 限制，支持头像图片随简历提交与预览",
+      "缩小左侧角色档案头像预览尺寸",
+      "角色档案支持上传个人照片，并放在个人信息最右侧展示",
+      "移除界面文案：左侧编辑区、右侧PDF实时预览标题",
+      "所有删除操作增加二次确认弹窗，并展示被删除对象名称",
+      "档案文件列表最多显示3条，超出后启用列表内滚动",
+      "将设为默认/新建/删除移动到档案项内，并与默认/当前同一行展示",
+      "移除档案文件中的默认简历下拉框，仅保留按钮操作",
+      "将档案文件框右上角加入新建/删除/设默认/更换简历文件按钮",
+      "在左侧编辑区新增档案文件列表展示",
+      "将简历文件管理条上移到顶部并置于功能区上方",
+      "实现多简历文件管理：默认/切换/设默认/删除/新建",
+      "将简历保存从内存改为持久化文件存储",
+      "将 PDF 预览自动刷新周期调整为 1 分钟",
+      "修复 Web 顶部工具栏样式冲突，解决功能按钮显示不全问题",
+      "实现模板渲染页面（HTML）",
+      "接入 Playwright 生成 PDF",
+      "新增模板切换能力（2 套起步）"
+    ]
+  }
+}

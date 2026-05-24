@@ -1,0 +1,222 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://resume-agent.local/schemas/resume.schema.json",
+  "title": "Resume",
+  "type": "object",
+  "required": [
+    "basics"
+  ],
+  "properties": {
+    "basics": {
+      "type": "object",
+      "required": [
+        "name",
+        "email"
+      ],
+      "properties": {
+        "name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "email": {
+          "type": "string",
+          "format": "email"
+        },
+        "phone": {
+          "type": "string"
+        },
+        "location": {
+          "type": "string"
+        },
+        "summary": {
+          "type": "string"
+        },
+        "photo": {
+          "type": "string"
+        },
+        "extraInfos": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": [
+              "label",
+              "value"
+            ],
+            "properties": {
+              "label": {
+                "type": "string"
+              },
+              "value": {
+                "type": "string"
+              },
+              "icon": {
+                "type": "string"
+              }
+            },
+            "additionalProperties": false
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "education": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "school",
+          "degree",
+          "startDate",
+          "endDate"
+        ],
+        "properties": {
+          "school": {
+            "type": "string"
+          },
+          "degree": {
+            "type": "string"
+          },
+          "major": {
+            "type": "string"
+          },
+          "startDate": {
+            "type": "string"
+          },
+          "endDate": {
+            "type": "string"
+          },
+          "highlights": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "gpa": {
+            "type": "string"
+          },
+          "schoolTags": {
+            "type": "string"
+          },
+          "college": {
+            "type": "string"
+          },
+          "summary": {
+            "type": "string"
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    "experience": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "company",
+          "role",
+          "startDate",
+          "endDate"
+        ],
+        "properties": {
+          "company": {
+            "type": "string"
+          },
+          "role": {
+            "type": "string"
+          },
+          "startDate": {
+            "type": "string"
+          },
+          "endDate": {
+            "type": "string"
+          },
+          "highlights": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    "projects": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "name"
+        ],
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "highlights": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "link": {
+            "type": "string",
+            "format": "uri"
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    "skills": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "customSections": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "title",
+          "items"
+        ],
+        "properties": {
+          "title": {
+            "type": "string"
+          },
+          "items": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": [
+                "title"
+              ],
+              "properties": {
+                "title": {
+                  "type": "string"
+                },
+                "org": {
+                  "type": "string"
+                },
+                "period": {
+                  "type": "string"
+                },
+                "highlights": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              },
+              "additionalProperties": false
+            }
+          }
+        },
+        "additionalProperties": false
+      }
+    }
+  },
+  "additionalProperties": false
+}

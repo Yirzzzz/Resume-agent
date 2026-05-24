@@ -1,0 +1,19 @@
+{
+  "id": "modern-cn-001",
+  "name": "Modern CN",
+  "layout": "single-column",
+  "supports": {
+    "onePageOptimization": true,
+    "multiPage": true,
+    "locale": ["zh-CN", "en-US"]
+  },
+  "tokens": {
+    "fontFamily": "Noto Sans SC",
+    "titleFontFamily": "Noto Serif SC",
+    "accentColor": "#2f5d8a",
+    "textColor": "#1f2937",
+    "pageMargin": "14mm",
+    "lineHeight": 1.5,
+    "bodyFontSize": "10.5pt"
+  }
+}

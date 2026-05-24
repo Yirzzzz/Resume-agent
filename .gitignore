@@ -1,0 +1,39 @@
+# ---- Dependencies ----
+node_modules/
+.pnpm-store/
+
+# ---- Build / runtime artifacts ----
+.next/
+out/
+dist/
+build/
+coverage/
+.turbo/
+.cache/
+*.tsbuildinfo
+.eslintcache
+
+# ---- Logs ----
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+
+# ---- Environment / local configs ----
+.env
+.env.*
+!.env.example
+.DS_Store
+.idea/
+.vscode/
+
+# ---- Process / AI collaboration notes ----
+progress.md
+agents.md
+**/AGENTS.md
+**/CLAUDE.md
+
+# ---- Local data (privacy) ----
+data/*
+!data/resume-files.example.json
