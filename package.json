@@ -4,7 +4,7 @@
   "version": "0.1.0",
   "packageManager": "pnpm@10.28.2",
   "scripts": {
-    "dev": "sh -c 'echo \"[resume-agent] 打开浏览器访问: http://localhost:3000\"; echo \"[resume-agent] API 默认: http://localhost:3001\"; pnpm -r --parallel --if-present dev'",
+    "dev": "node -e \"console.log('[resume-agent] 打开浏览器访问: http://localhost:3000'); console.log('[resume-agent] API 默认: http://localhost:3001')\" && pnpm -r --parallel --if-present dev",
     "dev:web": "pnpm --filter web dev",
     "dev:api": "pnpm --filter api start:dev",
     "build": "pnpm -r build",
