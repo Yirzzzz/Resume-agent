@@ -1,7 +1,24 @@
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { createServer } from 'node:net';
+import { existsSync } from 'node:fs';
+import { join } from 'node:path';
 import { json, urlencoded } from 'express';
+import { config as loadEnv } from 'dotenv';
+
+const envCandidates = [
+  join(process.cwd(), '.env'),
+  join(process.cwd(), '..', '.env'),
+  join(process.cwd(), '..', '..', '.env'),
+  join(process.cwd(), 'apps', 'api', '.env'),
+];
+
+for (const envPath of envCandidates) {
+  if (existsSync(envPath)) {
+    loadEnv({ path: envPath, override: false });
+    break;
+  }
+}
 
 async function isPortAvailable(port: number): Promise<boolean> {
   return new Promise((resolve) => {
@@ -48,6 +65,13 @@ async function bootstrap() {
 
   const preferredPort = Number(process.env.PORT ?? 3001);
   const port = await resolvePort(preferredPort);
+
+  const hasInterviewBase = Boolean(process.env.INTERVIEW_BASE_URL?.trim());
+  const hasInterviewKey = Boolean(process.env.INTERVIEW_API_KEY?.trim());
+  const interviewModel = process.env.INTERVIEW_MODEL?.trim() || 'gpt-4o-mini';
+  console.log(
+    `[resume-agent-api] env loaded: INTERVIEW_BASE_URL=${hasInterviewBase ? 'yes' : 'no'}, INTERVIEW_API_KEY=${hasInterviewKey ? 'yes' : 'no'}, INTERVIEW_MODEL=${interviewModel}`,
+  );
 
   await app.listen(port);
   console.log(`[resume-agent-api] listening on http://localhost:${port}`);

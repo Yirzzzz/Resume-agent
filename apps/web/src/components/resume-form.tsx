@@ -101,6 +101,26 @@ type ExtraInfoEntry = {
   icon: string;
 };
 
+type PolishTarget = {
+  id: string;
+  sectionTitle: string;
+  title: string;
+  org: string;
+  period: string;
+  bullets: string;
+};
+
+type PolishResultItem = {
+  id: string;
+  polishedTitle: string;
+  polishedOrg: string;
+  polishedPeriod: string;
+  polishedBullets: string;
+  jdRelevance?: 'high' | 'medium' | 'low' | 'none' | string;
+  jdImprovements: string[];
+  changeSummary: string;
+};
+
 const uid = () => Math.random().toString(36).slice(2, 9);
 const defaultEntry = (): Entry => ({ title: '', org: '', period: '', bullets: '' });
 const DEGREE_OPTIONS = ['中专', '大专', '本科', '硕士', '博士', 'MBA'] as const;
@@ -386,6 +406,19 @@ const ToolIcon = ({ kind }: { kind: 'template' | 'font' | 'line' | 'margin' }) =
   );
 };
 
+const TrashIcon = () => (
+  <svg viewBox="0 0 24 24" aria-hidden="true">
+    <path
+      d="M4 7h16M9 7V5h6v2M8 7l1 12h6l1-12M10 10v6M14 10v6"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    />
+  </svg>
+);
+
 export function ResumeForm({ apiBaseUrl, templates }: { apiBaseUrl: string; templates: Template[] }) {
   const [name, setName] = useState('你的姓名');
   const [email, setEmail] = useState('you@example.com');
@@ -418,8 +451,56 @@ export function ResumeForm({ apiBaseUrl, templates }: { apiBaseUrl: string; temp
   const [loadedVersion, setLoadedVersion] = useState(0);
   const previewUrlRef = useRef<string | null>(null);
   const photoInputRef = useRef<HTMLInputElement | null>(null);
+  const [showPolishModal, setShowPolishModal] = useState(false);
+  const [selectedPolishKeys, setSelectedPolishKeys] = useState<string[]>([]);
+  const [polishLoading, setPolishLoading] = useState(false);
+  const [polishError, setPolishError] = useState<string | null>(null);
+  const [polishJd, setPolishJd] = useState('');
+  const [polishResults, setPolishResults] = useState<Record<string, PolishResultItem>>({});
+  const [previewMode, setPreviewMode] = useState<'pdf' | 'polish'>('pdf');
+  const [polishSelectedSnapshot, setPolishSelectedSnapshot] = useState<PolishTarget[]>([]);
+  const [activePolishTargetId, setActivePolishTargetId] = useState('');
 
   const enabledSections = sections.filter((s) => s.enabled);
+  const polishTargets = useMemo<PolishTarget[]>(() => {
+    const targets: PolishTarget[] = [];
+    sections.forEach((section, sIdx) => {
+      if (!section.enabled) return;
+      const isEducation = /教育|校园|education/i.test(section.title);
+      if (isEducation) return;
+      section.items.forEach((item, iIdx) => {
+        const hasContent =
+          item.title.trim() ||
+          item.org.trim() ||
+          item.period.trim() ||
+          item.bullets.trim();
+        if (!hasContent) return;
+        targets.push({
+          id: `section-${sIdx}-${iIdx}`,
+          sectionTitle: section.title.trim() || '未命名模块',
+          title: item.title.trim(),
+          org: item.org.trim(),
+          period: item.period.trim(),
+          bullets: item.bullets.trim(),
+        });
+      });
+    });
+    if (showSkills && skills.trim()) {
+      targets.push({
+        id: 'skills-0',
+        sectionTitle: '技能',
+        title: '技能',
+        org: '',
+        period: '',
+        bullets: skills
+          .split(',')
+          .map((x) => x.trim())
+          .filter(Boolean)
+          .join('\n'),
+      });
+    }
+    return targets;
+  }, [sections, showSkills, skills]);
 
   const resumePayload = useMemo<ResumePayload>(
     () => ({
@@ -990,6 +1071,65 @@ export function ResumeForm({ apiBaseUrl, templates }: { apiBaseUrl: string; temp
     }
   }
 
+  function openPolishModal() {
+    setShowPolishModal(true);
+    setPolishError(null);
+    setPolishResults({});
+    if (selectedPolishKeys.length === 0) {
+      setSelectedPolishKeys(polishTargets.slice(0, 2).map((item) => item.id));
+    }
+  }
+
+  async function generatePolishDraft() {
+    const selected = polishTargets.filter((item) =>
+      selectedPolishKeys.includes(item.id),
+    );
+    if (selected.length === 0) {
+      setPolishError('请先选择至少一个条目');
+      return;
+    }
+    setPolishLoading(true);
+    setPolishError(null);
+    try {
+      const res = await fetch(`${apiBaseUrl}/resume/polish`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          resumeFileId: activeFileId ?? undefined,
+          targetPosition: '目标岗位',
+          jobDescription: polishJd.trim(),
+          targets: selected,
+        }),
+      });
+      const data = (await res.json()) as {
+        message?: string;
+        items?: PolishResultItem[];
+      };
+      if (!res.ok) {
+        throw new Error(data.message || `润色失败（${res.status}）`);
+      }
+      const map: Record<string, PolishResultItem> = {};
+      (data.items ?? []).forEach((item) => {
+        if (!item?.id) return;
+        map[item.id] = item;
+      });
+      setPolishResults(map);
+      setPolishSelectedSnapshot(selected);
+      if (Object.keys(map).length === 0) {
+        setPolishError('模型未返回可用润色结果，请重试');
+      } else {
+        const firstValid = selected.find((x) => map[x.id])?.id ?? '';
+        setActivePolishTargetId(firstValid);
+        setShowPolishModal(false);
+        setPreviewMode('polish');
+      }
+    } catch (e) {
+      setPolishError(e instanceof Error ? e.message : '润色失败');
+    } finally {
+      setPolishLoading(false);
+    }
+  }
+
   return (
     <section>
       <div className="top-toolbar toolbar-v2 comic-panel p-3">
@@ -1102,8 +1242,8 @@ export function ResumeForm({ apiBaseUrl, templates }: { apiBaseUrl: string; temp
             </label>
           </div>
           <div className="toolbar-right">
-            <button className="comic-btn" type="button" onClick={handleSave} disabled={loading || fileLoading || !activeFileId}>
-              {loading ? '保存中' : '保存'}
+            <button className="comic-btn alt" type="button" onClick={openPolishModal}>
+              AI润色
             </button>
             <button className="comic-btn alt" type="button" onClick={handleExportPdf}>
               导出PDF
@@ -1111,10 +1251,13 @@ export function ResumeForm({ apiBaseUrl, templates }: { apiBaseUrl: string; temp
             <button
               className="comic-btn"
               type="button"
-              onClick={() => void handleCompilePreview()}
+              onClick={() => {
+                setPreviewMode('pdf');
+                void handleCompilePreview();
+              }}
               disabled={loading || fileLoading || previewLoading || !activeFileId}
             >
-              保存并预览
+              PDF预览
             </button>
           </div>
         </div>
@@ -1164,8 +1307,15 @@ export function ResumeForm({ apiBaseUrl, templates }: { apiBaseUrl: string; temp
                         <button className="archive-op-btn create" type="button" onClick={() => void handleCreateFile()} disabled={fileLoading}>
                           新建
                         </button>
-                        <button className="archive-op-btn delete" type="button" onClick={() => void handleDeleteFile()} disabled={files.length <= 1 || fileLoading}>
-                          删除
+                        <button
+                          className="archive-op-btn delete icon-trash-btn"
+                          type="button"
+                          onClick={() => void handleDeleteFile()}
+                          disabled={files.length <= 1 || fileLoading}
+                          title="删除简历文件"
+                          aria-label="删除简历文件"
+                        >
+                          <TrashIcon />
                         </button>
                       </span>
                     ) : null}
@@ -1209,17 +1359,18 @@ export function ResumeForm({ apiBaseUrl, templates }: { apiBaseUrl: string; temp
                   onChange={handleProfilePhotoUpload}
                 />
                 <button
-                  className="tiny-btn"
+                  className="tiny-btn icon-trash-btn"
                   type="button"
                   onClick={handleDeletePhoto}
                   disabled={!profilePhoto}
+                  title="删除照片"
+                  aria-label="删除照片"
                 >
-                  删除照片
+                  <TrashIcon />
                 </button>
               </div>
             </div>
             <div className="extra-info-head">
-              <span className="extra-info-title">附加信息（显示在邮箱电话城市下一行）</span>
               <div className="extra-info-quick">
                 <button className="tiny-btn" type="button" onClick={() => addExtraInfo({ label: '求职状态', icon: '💼' })}>
                   + 求职状态
@@ -1260,8 +1411,14 @@ export function ResumeForm({ apiBaseUrl, templates }: { apiBaseUrl: string; temp
                   onChange={(e) => updateExtraInfo(idx, 'value', e.target.value)}
                   placeholder="字段值（如 在职-月内到岗）"
                 />
-                <button className="tiny-btn" type="button" onClick={() => removeExtraInfo(idx)}>
-                  删除
+                <button
+                  className="tiny-btn icon-trash-btn"
+                  type="button"
+                  onClick={() => removeExtraInfo(idx)}
+                  title="删除附加信息"
+                  aria-label="删除附加信息"
+                >
+                  <TrashIcon />
                 </button>
               </div>
             ))}
@@ -1390,11 +1547,13 @@ export function ResumeForm({ apiBaseUrl, templates }: { apiBaseUrl: string; temp
                     下移
                   </button>
                   <button
-                    className="tiny-btn"
+                    className="tiny-btn icon-trash-btn"
                     type="button"
                     onClick={() => handleDeleteEducation(idx, entry.school)}
+                    title="删除校园经历"
+                    aria-label="删除校园经历"
                   >
-                    删除校园经历
+                    <TrashIcon />
                   </button>
                 </div>
               </div>
@@ -1449,7 +1608,7 @@ export function ResumeForm({ apiBaseUrl, templates }: { apiBaseUrl: string; temp
                           下移
                         </button>
                         <button
-                          className="tiny-btn"
+                          className="tiny-btn icon-trash-btn"
                           type="button"
                           onClick={() =>
                             handleDeleteItem(
@@ -1459,8 +1618,10 @@ export function ResumeForm({ apiBaseUrl, templates }: { apiBaseUrl: string; temp
                               section.title,
                             )
                           }
+                          title="删除条目"
+                          aria-label="删除条目"
                         >
-                          删除条目
+                          <TrashIcon />
                         </button>
                       </div>
                     </div>
@@ -1489,11 +1650,13 @@ export function ResumeForm({ apiBaseUrl, templates }: { apiBaseUrl: string; temp
                   + 新增条目
                 </button>
                 <button
-                  className="tiny-btn"
+                  className="tiny-btn icon-trash-btn"
                   type="button"
                   onClick={() => handleDeleteSection(section.id, section.title)}
+                  title="删除模块"
+                  aria-label="删除模块"
                 >
-                  删除模块
+                  <TrashIcon />
                 </button>
               </div>
             </div>
@@ -1516,19 +1679,150 @@ export function ResumeForm({ apiBaseUrl, templates }: { apiBaseUrl: string; temp
         </div>
 
         <div className="comic-panel p-4 preview-pane">
-          <h2 className="comic-title">PDF实时预览</h2>
-          {previewLoading ? <p className="text-sm">正在生成预览 PDF...</p> : null}
-          <div className="pdf-stage">
-            <div className="pdf-frame-wrap">
-              {previewUrl ? (
-                <iframe title="resume-pdf-preview" src={`${previewUrl}#toolbar=0&navpanes=0&view=Fit`} className="pdf-frame" />
-              ) : (
-                <div className="pdf-empty">暂无预览</div>
-              )}
+          {previewMode === 'pdf' ? (
+            <>
+              <h2 className="comic-title">PDF预览</h2>
+              {previewLoading ? <p className="text-sm">正在生成预览 PDF...</p> : null}
+              <div className="pdf-stage">
+                <div className="pdf-frame-wrap">
+                  {previewUrl ? (
+                    <iframe title="resume-pdf-preview" src={`${previewUrl}#toolbar=0&navpanes=0&view=Fit`} className="pdf-frame" />
+                  ) : (
+                    <div className="pdf-empty">暂无预览</div>
+                  )}
+                </div>
+              </div>
+            </>
+          ) : (
+            <div className="polish-preview">
+              <div className="polish-preview-top">
+                <div className="comic-banner polish-banner">润色结果</div>
+              </div>
+              <div className="polish-preview-head">
+                <div className="polish-preview-actions">
+                  <div className="polish-select-wrap">
+                    <select
+                      className="comic-input polish-select"
+                      value={activePolishTargetId}
+                      onChange={(e) => setActivePolishTargetId(e.target.value)}
+                    >
+                      {polishSelectedSnapshot
+                        .filter((x) => polishResults[x.id])
+                        .map((item, idx) => (
+                          <option key={item.id} value={item.id}>
+                            {idx + 1}. [{item.sectionTitle}] {item.title || '未命名条目'}
+                          </option>
+                        ))}
+                    </select>
+                    <span className="polish-select-arrow">▼</span>
+                  </div>
+                  <button className="comic-btn alt" type="button" onClick={() => setPreviewMode('pdf')}>
+                    返回PDF
+                  </button>
+                </div>
+              </div>
+              <div className="interview-polish-compare mt-2">
+                {(() => {
+                  const before = polishSelectedSnapshot.find((x) => x.id === activePolishTargetId)
+                    ?? polishSelectedSnapshot.find((x) => polishResults[x.id]);
+                  if (!before) return null;
+                  const after = polishResults[before.id];
+                  if (!after) return null;
+                  return (
+                    <div key={before.id} className="interview-polish-compare-item action-lines-stage">
+                      <div className="interview-polish-two-col">
+                        <div>
+                          <div className="interview-polish-col-title before">润色前</div>
+                          <pre className="interview-polish-pre before">{`${before.title}${before.org ? ` - ${before.org}` : ''}\n${before.period}\n${before.bullets}`.trim()}</pre>
+                        </div>
+                        <div>
+                          <div className="interview-polish-col-title after">润色后</div>
+                          <pre className="interview-polish-pre after">{`${after.polishedTitle}${after.polishedOrg ? ` - ${after.polishedOrg}` : ''}\n${after.polishedPeriod}\n${after.polishedBullets}`.trim()}</pre>
+                        </div>
+                      </div>
+                      {after.changeSummary ? (
+                        <div className="interview-polish-summary">改动说明：{after.changeSummary}</div>
+                      ) : null}
+                      {after.jdRelevance === 'none' ? (
+                        <div className="interview-polish-summary">与当前 JD 相关性低：仅做表达润色，不提供下一步建议。</div>
+                      ) : null}
+                      {after.jdImprovements?.length ? (
+                        <>
+                          <div className="interview-polish-col-title next mt-2">下一步优化建议</div>
+                          <ul className="interview-expected-points">
+                            {after.jdImprovements.map((tip) => (
+                              <li key={tip}>{tip}</li>
+                            ))}
+                          </ul>
+                        </>
+                      ) : null}
+                    </div>
+                  );
+                })()}
+              </div>
             </div>
-          </div>
+          )}
         </div>
       </div>
+      {showPolishModal ? (
+        <div className="comic-modal-backdrop" onClick={() => setShowPolishModal(false)}>
+          <div className="comic-modal" onClick={(e) => e.stopPropagation()}>
+            <div className="comic-modal-head">
+              <div className="comic-subtitle">AI 润色</div>
+              <button className="comic-btn" type="button" onClick={() => setShowPolishModal(false)}>
+                关闭
+              </button>
+            </div>
+            <label className="comic-label block">
+              岗位 JD（可选）
+              <textarea
+                className="comic-input interview-jd"
+                rows={4}
+                value={polishJd}
+                onChange={(e) => setPolishJd(e.target.value)}
+                placeholder="粘贴岗位 JD，提升润色建议针对性"
+              />
+            </label>
+            <div className="interview-polish-list mt-2">
+              {polishTargets.length === 0 ? (
+                <div className="interview-history-empty">未找到可润色条目（教育经历已排除）</div>
+              ) : (
+                polishTargets.map((item, idx) => {
+                  const key = item.id;
+                  return (
+                    <label key={key} className="interview-polish-item">
+                      <input
+                        type="checkbox"
+                        checked={selectedPolishKeys.includes(key)}
+                        onChange={(e) =>
+                          setSelectedPolishKeys((prev) =>
+                            e.target.checked ? [...prev, key] : prev.filter((x) => x !== key),
+                          )
+                        }
+                      />
+                      <span>
+                        [{item.sectionTitle}] {(item.title.trim() || `条目${idx + 1}`) +
+                          (item.org.trim() ? ` - ${item.org.trim()}` : '')}
+                      </span>
+                    </label>
+                  );
+                })
+              )}
+            </div>
+            <div className="interview-config-actions">
+              <button
+                className="comic-btn alt"
+                type="button"
+                onClick={() => void generatePolishDraft()}
+                disabled={polishLoading}
+              >
+                {polishLoading ? '润色中...' : '开始润色'}
+              </button>
+            </div>
+            {polishError ? <div className="comic-error mt-2">{polishError}</div> : null}
+          </div>
+        </div>
+      ) : null}
     </section>
   );
 }

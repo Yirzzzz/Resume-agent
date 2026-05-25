@@ -37,21 +37,13 @@ type InterviewHistoryRecord = {
   result: InterviewResult;
 };
 
-const INTERVIEW_CONFIG_STORAGE_KEY = 'resume-agent:interview-config:v2';
 const INTERVIEW_HISTORY_STORAGE_KEY = 'resume-agent:interview-history:v2';
 const INTERVIEW_HISTORY_LIMIT = 20;
 
 const uid = () => Math.random().toString(36).slice(2, 10);
 
 export function InterviewSimulator({ apiBaseUrl }: { apiBaseUrl: string }) {
-  const [baseUrl, setBaseUrl] = useState('https://api.openai.com/v1');
-  const [apiKey, setApiKey] = useState('');
-  const [model, setModel] = useState('gpt-4o-mini');
-  const [showConfig, setShowConfig] = useState(false);
   const [showHistoryModal, setShowHistoryModal] = useState(false);
-  const [draftBaseUrl, setDraftBaseUrl] = useState(baseUrl);
-  const [draftApiKey, setDraftApiKey] = useState(apiKey);
-  const [draftModel, setDraftModel] = useState(model);
   const [rounds, setRounds] = useState(6);
   const [companyName, setCompanyName] = useState('字节跳动');
   const [targetPosition, setTargetPosition] = useState('AI 应用算法工程师');
@@ -80,32 +72,6 @@ export function InterviewSimulator({ apiBaseUrl }: { apiBaseUrl: string }) {
       : null;
 
   useEffect(() => {
-    try {
-      const raw = localStorage.getItem(INTERVIEW_CONFIG_STORAGE_KEY);
-      if (raw) {
-        const parsed = JSON.parse(raw) as {
-          baseUrl?: string;
-          model?: string;
-          companyName?: string;
-          targetPosition?: string;
-        };
-        if (typeof parsed.baseUrl === 'string' && parsed.baseUrl.trim()) {
-          setBaseUrl(parsed.baseUrl.trim());
-        }
-        if (typeof parsed.model === 'string' && parsed.model.trim()) {
-          setModel(parsed.model.trim());
-        }
-        if (typeof parsed.companyName === 'string' && parsed.companyName.trim()) {
-          setCompanyName(parsed.companyName.trim());
-        }
-        if (typeof parsed.targetPosition === 'string' && parsed.targetPosition.trim()) {
-          setTargetPosition(parsed.targetPosition.trim());
-        }
-      }
-    } catch {
-      // ignore corrupted local config
-    }
-
     try {
       const rawHistory = localStorage.getItem(INTERVIEW_HISTORY_STORAGE_KEY);
       if (!rawHistory) return;
@@ -152,55 +118,14 @@ export function InterviewSimulator({ apiBaseUrl }: { apiBaseUrl: string }) {
     void loadFiles();
   }, [apiBaseUrl]);
 
+
   const canStart = useMemo(
     () =>
       Boolean(
-        baseUrl.trim() &&
-          resumeFileId &&
-          companyName.trim() &&
-          targetPosition.trim(),
+        resumeFileId && companyName.trim() && targetPosition.trim(),
       ),
-    [baseUrl, companyName, resumeFileId, targetPosition],
+    [companyName, resumeFileId, targetPosition],
   );
-
-  const openConfigModal = () => {
-    setDraftBaseUrl(baseUrl);
-    setDraftApiKey(apiKey);
-    setDraftModel(model);
-    setShowConfig(true);
-  };
-
-  const saveConfig = () => {
-    const next = {
-      baseUrl: draftBaseUrl.trim(),
-      model: draftModel.trim(),
-      companyName: companyName.trim(),
-      targetPosition: targetPosition.trim(),
-    };
-    setBaseUrl(next.baseUrl);
-    setModel(next.model);
-    try {
-      localStorage.setItem(INTERVIEW_CONFIG_STORAGE_KEY, JSON.stringify(next));
-    } catch {
-      // ignore storage failure
-    }
-    setShowConfig(false);
-  };
-
-  // Remove legacy persisted apiKey if it existed in prior versions.
-  useEffect(() => {
-    try {
-      const raw = localStorage.getItem(INTERVIEW_CONFIG_STORAGE_KEY);
-      if (!raw) return;
-      const parsed = JSON.parse(raw) as Record<string, unknown>;
-      if ('apiKey' in parsed) {
-        delete parsed.apiKey;
-        localStorage.setItem(INTERVIEW_CONFIG_STORAGE_KEY, JSON.stringify(parsed));
-      }
-    } catch {
-      // ignore parse/storage errors
-    }
-  }, []);
 
   const persistHistory = (records: InterviewHistoryRecord[]) => {
     try {
@@ -220,9 +145,6 @@ export function InterviewSimulator({ apiBaseUrl }: { apiBaseUrl: string }) {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          baseUrl: baseUrl.trim(),
-          apiKey: apiKey.trim(),
-          model: model.trim(),
           resumeFileId,
           companyName: companyName.trim(),
           targetPosition: targetPosition.trim(),
@@ -312,9 +234,6 @@ export function InterviewSimulator({ apiBaseUrl }: { apiBaseUrl: string }) {
       <div className="interview-top-actions">
         <button className="comic-btn alt" type="button" onClick={() => setShowHistoryModal(true)}>
           历史记录
-        </button>
-        <button className="comic-btn alt" type="button" onClick={openConfigModal}>
-          模型配置
         </button>
       </div>
 
@@ -509,54 +428,6 @@ export function InterviewSimulator({ apiBaseUrl }: { apiBaseUrl: string }) {
         </div>
       </div>
 
-      {showConfig ? (
-        <div className="comic-modal-backdrop" onClick={() => setShowConfig(false)}>
-          <div className="comic-modal" onClick={(e) => e.stopPropagation()}>
-            <div className="comic-modal-head">
-              <div className="comic-subtitle">模型配置</div>
-              <button className="comic-btn" type="button" onClick={() => setShowConfig(false)}>
-                关闭
-              </button>
-            </div>
-            <div className="interview-config-grid">
-              <label className="comic-label">
-                OpenAI Base URL
-                <input
-                  className="comic-input"
-                  value={draftBaseUrl}
-                  onChange={(e) => setDraftBaseUrl(e.target.value)}
-                  placeholder="https://api.openai.com/v1"
-                />
-              </label>
-              <label className="comic-label">
-                API Key
-                <input
-                  className="comic-input"
-                  type="password"
-                  value={draftApiKey}
-                  onChange={(e) => setDraftApiKey(e.target.value)}
-                  placeholder="sk-..."
-                />
-              </label>
-              <label className="comic-label">
-                Model
-                <input
-                  className="comic-input"
-                  value={draftModel}
-                  onChange={(e) => setDraftModel(e.target.value)}
-                  placeholder="gpt-4o-mini"
-                />
-              </label>
-            </div>
-            <div className="interview-config-actions">
-              <button className="comic-btn alt" type="button" onClick={saveConfig}>
-                保存配置
-              </button>
-            </div>
-          </div>
-        </div>
-      ) : null}
-
       {showHistoryModal ? (
         <div className="comic-modal-backdrop" onClick={() => setShowHistoryModal(false)}>
           <div className="comic-modal" onClick={(e) => e.stopPropagation()}>
@@ -599,6 +470,7 @@ export function InterviewSimulator({ apiBaseUrl }: { apiBaseUrl: string }) {
           </div>
         </div>
       ) : null}
+
     </div>
   );
 }

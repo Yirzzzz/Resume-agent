@@ -4,7 +4,7 @@
     "status": "in_progress",
     "owner": "yirz",
     "created_at": "2026-05-24",
-    "last_updated": "2026-05-24"
+    "last_updated": "2026-05-25"
   },
   "vision": "构建低门槛、可 Web 使用的简历 Agent 平台，具备多模板、智能一页、内容润色与模拟面试能力。",
   "principles": [
@@ -148,6 +148,7 @@
     "milestone": "M1",
     "feature": "F-103",
     "next_actions": [
+      "润色结果头部操作区改为整行铺满：下拉框自适应占满+返回PDF同一行固定",
       "联系方式图标改用 Emoji（邮箱/电话/位置）",
       "统一联系方式与附加信息行距，固定图标行高避免 emoji 撑高",
       "角色档案联系方式图标改为 SVG 图标（非 emoji/字符）",

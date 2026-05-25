@@ -186,7 +186,7 @@ export class ResumesController {
     ).trim();
     if (!baseUrl || !apiKey) {
       throw new BadRequestException(
-        '缺少模型配置：请在请求中传 baseUrl/apiKey，或在服务端配置 INTERVIEW_BASE_URL / INTERVIEW_API_KEY',
+        '缺少模型配置：请在服务端配置 INTERVIEW_BASE_URL / INTERVIEW_API_KEY（或 OPENAI_BASE_URL / OPENAI_API_KEY）',
       );
     }
 
@@ -381,6 +381,184 @@ JSON 格式如下：
       ],
       scoreCriteria: [],
       tips: [],
+    };
+  }
+
+  @Post('resume/polish')
+  async polishResumeContent(
+    @Body()
+    body: {
+      baseUrl?: string;
+      apiKey?: string;
+      model?: string;
+      resumeFileId?: string;
+      resume?: unknown;
+      jobDescription?: string;
+      targetPosition?: string;
+      targets?: Array<{
+        id: string;
+        sectionTitle: string;
+        title?: string;
+        org?: string;
+        period?: string;
+        bullets?: string;
+      }>;
+    },
+  ) {
+    const targets = Array.isArray(body.targets) ? body.targets : [];
+    if (targets.length === 0) {
+      throw new BadRequestException('请至少选择一个需要润色的条目');
+    }
+    if (targets.length > 20) {
+      throw new BadRequestException('一次最多润色 20 个条目');
+    }
+
+    const baseUrl = String(
+      body.baseUrl ??
+        process.env.INTERVIEW_BASE_URL ??
+        process.env.OPENAI_BASE_URL ??
+        '',
+    )
+      .trim()
+      .replace(/\/+$/, '');
+    const apiKey = String(
+      body.apiKey ??
+        process.env.INTERVIEW_API_KEY ??
+        process.env.OPENAI_API_KEY ??
+        '',
+    ).trim();
+    if (!baseUrl || !apiKey) {
+      throw new BadRequestException(
+        '缺少模型配置：请在服务端配置 INTERVIEW_BASE_URL / INTERVIEW_API_KEY（或 OPENAI_BASE_URL / OPENAI_API_KEY）',
+      );
+    }
+
+    const resume = body.resume
+      ? this.resumesService.ensureValidResume(body.resume)
+      : body.resumeFileId
+        ? this.resumesService.getFile(body.resumeFileId).data
+        : this.resumesService.getDefaultFile().data;
+    const model = String(
+      body.model ?? process.env.INTERVIEW_MODEL ?? 'gpt-4o-mini',
+    ).trim() || 'gpt-4o-mini';
+    const jd = String(body.jobDescription ?? '').trim();
+    const targetPosition = String(body.targetPosition ?? '').trim() || '目标岗位';
+
+    const endpoint = `${baseUrl}/chat/completions`;
+    const systemPrompt =
+      '你是资深技术简历顾问。你只返回 JSON，不返回 Markdown 和额外解释。';
+    const userPrompt = `
+你需要根据岗位 JD，对候选人选中的简历条目进行“最小改动的强化润色”。
+
+【规则】
+1. 只润色用户选中的条目，不要扩展到未选中条目。
+2. 不得编造候选人没有提供的经历、结果、指标。
+3. 允许重写表达顺序、语句精炼、突出技术决策和业务价值。
+4. 如果原文缺少量化数据，只能给“建议补充项”，不能凭空写具体数字。
+5. 保留原有语义，修改幅度克制，突出与 JD 的匹配度。
+6. 每个条目都给出：
+   - polishedTitle/polishedOrg/polishedPeriod/polishedBullets
+   - jdRelevance: high|medium|low|none（与岗位 JD 的相关性）
+   - jdImprovements: 仅当 jdRelevance 为 high/medium/low 时给 1-3 条“下一步优化建议”；如果 jdRelevance=none 必须为空数组
+   - changeSummary: 简述你改了什么、为什么
+7. “下一步优化建议”必须具体到可执行动作，禁止空泛话术（如“继续优化”、“加强学习”）。
+8. 若条目与 JD 明显无关（如方向不匹配的科研条目），只做表达润色，jdRelevance=none，且 jdImprovements=[]。
+
+【岗位信息】
+- 目标岗位：${targetPosition}
+- 岗位 JD：${jd || '无'}
+
+【候选人简历上下文（仅辅助理解，不可改写未选中内容）】
+${JSON.stringify(this.extractProjectContext(resume), null, 2)}
+
+【待润色条目】
+${JSON.stringify(targets, null, 2)}
+
+【输出格式】
+只输出 JSON：
+{
+  "items": [
+    {
+      "id": "string，对应输入 id",
+      "polishedTitle": "string",
+      "polishedOrg": "string",
+      "polishedPeriod": "string",
+      "polishedBullets": "string，多行文本，用\\n分隔",
+      "jdRelevance": "high|medium|low|none",
+      "jdImprovements": ["string"],
+      "changeSummary": "string"
+    }
+  ]
+}
+`;
+
+    const upstream = await fetch(endpoint, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${apiKey}`,
+      },
+      body: JSON.stringify({
+        model,
+        stream: false,
+        temperature: 0.4,
+        enable_thinking: false,
+        messages: [
+          { role: 'system', content: systemPrompt },
+          { role: 'user', content: userPrompt },
+        ],
+      }),
+    });
+
+    if (!upstream.ok) {
+      const errText = await upstream.text();
+      throw new BadRequestException(
+        `上游模型调用失败（${upstream.status}）：${errText.slice(0, 500)}`,
+      );
+    }
+
+    const data = (await upstream.json()) as Record<string, unknown>;
+    const content = this.extractTextContent(data);
+    if (!content) {
+      throw new BadRequestException(
+        `模型返回为空（响应摘要：${this.responseShapeSummary(data)}）`,
+      );
+    }
+    const parsed = this.tryParseJson(content);
+    if (!parsed) {
+      throw new BadRequestException('模型未返回合法 JSON，请重试');
+    }
+
+    const rawItems = Array.isArray(parsed.items) ? parsed.items : [];
+    const normalized = rawItems
+      .map((item) => {
+        if (!item || typeof item !== 'object') return null;
+        const obj = item as Record<string, unknown>;
+        const id = String(obj.id ?? '').trim();
+        if (!id) return null;
+        return {
+          id,
+          polishedTitle: String(obj.polishedTitle ?? '').trim(),
+          polishedOrg: String(obj.polishedOrg ?? '').trim(),
+          polishedPeriod: String(obj.polishedPeriod ?? '').trim(),
+          polishedBullets: String(obj.polishedBullets ?? '').trim(),
+          jdRelevance: String(obj.jdRelevance ?? '').trim() || 'medium',
+          jdImprovements: Array.isArray(obj.jdImprovements)
+            ? obj.jdImprovements.map((x) => String(x).trim()).filter(Boolean)
+            : [],
+          changeSummary: String(obj.changeSummary ?? '').trim(),
+        };
+      })
+      .filter(Boolean);
+
+    return {
+      items: normalized.map((item) => {
+        if (!item) return item;
+        if (item.jdRelevance === 'none') {
+          return { ...item, jdImprovements: [] };
+        }
+        return item;
+      }),
     };
   }
 
