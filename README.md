@@ -56,14 +56,10 @@ pnpm --filter api exec playwright install chromium
 cp data/resume-files.example.json data/resume-files.json
 ```
 
-### 4) 启动前后端
+### 4) 快速启动前后端
 
 ```bash
-# 仅启动前端
-pnpm dev:web
-
-# 仅启动后端
-pnpm dev:api
+pnpm dev
 ```
 
 默认访问：
