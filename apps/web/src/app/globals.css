@@ -1080,9 +1080,9 @@ body {
   height: 32px;
 }
 
-.icon-trash-btn svg {
-  width: 14px;
-  height: 14px;
+.icon-trash-btn .trash-emoji {
+  font-size: 14px;
+  line-height: 1;
 }
 
 .comic-btn {
@@ -1262,9 +1262,9 @@ body {
   padding: 2px;
 }
 
-.archive-op-btn.icon-trash-btn svg {
-  width: 12px;
-  height: 12px;
+.archive-op-btn.icon-trash-btn .trash-emoji {
+  font-size: 12px;
+  line-height: 1;
 }
 
 .archive-switch-select {

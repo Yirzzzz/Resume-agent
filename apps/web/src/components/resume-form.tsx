@@ -407,16 +407,9 @@ const ToolIcon = ({ kind }: { kind: 'template' | 'font' | 'line' | 'margin' }) =
 };
 
 const TrashIcon = () => (
-  <svg viewBox="0 0 24 24" aria-hidden="true">
-    <path
-      d="M4 7h16M9 7V5h6v2M8 7l1 12h6l1-12M10 10v6M14 10v6"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    />
-  </svg>
+  <span className="trash-emoji" aria-hidden="true">
+    🗑
+  </span>
 );
 
 export function ResumeForm({ apiBaseUrl, templates }: { apiBaseUrl: string; templates: Template[] }) {
@@ -1359,14 +1352,14 @@ export function ResumeForm({ apiBaseUrl, templates }: { apiBaseUrl: string; temp
                   onChange={handleProfilePhotoUpload}
                 />
                 <button
-                  className="tiny-btn icon-trash-btn"
+                  className="tiny-btn"
                   type="button"
                   onClick={handleDeletePhoto}
                   disabled={!profilePhoto}
                   title="删除照片"
                   aria-label="删除照片"
                 >
-                  <TrashIcon />
+                  删除照片
                 </button>
               </div>
             </div>
