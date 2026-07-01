@@ -23,8 +23,8 @@ describe('TemplatesService', () => {
           startDate: '2024.9',
           endDate: '2027.6',
           highlights: [
-            '【主修课程】模式识别、数字图像处理、机器学习、矩阵理论',
-            '【奖项/证书】mathorcup 研究生组国家级一等奖；华为杯国家级二等奖；学业二等奖学金',
+            '*【主修课程】模式识别、数字图像处理、机器学习、矩阵理论',
+            '*【奖项/证书】Mathorcup 研究生组国家级一等奖；华为杯国家级二等奖；学业二等奖学金',
           ],
         },
         {
@@ -134,6 +134,7 @@ describe('TemplatesService', () => {
 
     const html = service.renderHtml(resume, 'modern-cn-001');
 
+    expect(html).toContain('h2{margin:5px 0 6px;');
     expect(html).toContain('.section-content{padding-left:');
     expect(html).toContain('<h2>教育经历</h2><div class="section-content">');
     expect(html).toContain('<h2>项目经历</h2><div class="section-content">');
@@ -144,6 +145,11 @@ describe('TemplatesService', () => {
       '<h2>Skills</h2><div class="section-content">Python · TypeScript</div>',
     );
     expect(html).toContain('.line-block{margin-top:2px}');
+    expect(html).toContain('ul,ol{margin:6px 0 0 13px;padding-left:10px}');
+    expect(html).toContain('.line-list{margin:1px 0 0 13px;padding-left:10px}');
+    expect(html).toContain(
+      '<ul class="edu-detail"><li>【主修课程】模式识别、数字图像处理、机器学习、矩阵理论</li><li>【奖项/证书】Mathorcup 研究生组国家级一等奖；华为杯国家级二等奖；学业二等奖学金</li></ul>',
+    );
     expect(html).toContain('.compact-block{margin-bottom:4px}');
     expect(html).toContain('.compact-block:last-child{margin-bottom:0}');
     expect(html.match(/class="block compact-block"/g)).toHaveLength(9);
