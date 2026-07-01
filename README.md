@@ -44,6 +44,8 @@
 pnpm install
 ```
 
+> 依赖说明：本项目后端使用 NestJS 的 `@nestjs/platform-express`，执行 `pnpm install` 后会自动安装所需 Express 运行时依赖，通常不需要再手动 `pnpm add express`。
+
 ### 2.1) 安装 Playwright Chromium（PDF 预览必需）
 
 ```bash
@@ -82,4 +84,3 @@ Copy-Item .\.env.example .\.env
 ## 🔗 友链链接
 
 非常感谢linux do社区提供的交流平台：https://linux.do/latest
-
