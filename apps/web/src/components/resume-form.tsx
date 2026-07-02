@@ -18,6 +18,7 @@ type LayoutOptions = {
   pageMarginMm: number;
   bodyFontSizePt: number;
   lineHeight: number;
+  headerStyle: 'default' | 'centered';
   sectionTitles: { skills: string };
   accentColor: string;
   fontFamily: string;
@@ -130,6 +131,7 @@ const DEFAULT_LAYOUT: LayoutOptions = {
   pageMarginMm: 14,
   bodyFontSizePt: 10.5,
   lineHeight: 1.45,
+  headerStyle: 'default',
   sectionTitles: { skills: '技能' },
   accentColor: '#1f4f8f',
   fontFamily: 'Microsoft YaHei, PingFang SC, sans-serif',
@@ -375,7 +377,7 @@ function sectionsFromResume(resume: ResumePayload): Section[] {
   return sections.length > 0 ? sections : createDefaultSections();
 }
 
-const ToolIcon = ({ kind }: { kind: 'template' | 'font' | 'line' | 'margin' }) => {
+const ToolIcon = ({ kind }: { kind: 'template' | 'font' | 'line' | 'margin' | 'header' }) => {
   if (kind === 'template') {
     return (
       <svg viewBox="0 0 24 24" aria-hidden="true">
@@ -395,6 +397,14 @@ const ToolIcon = ({ kind }: { kind: 'template' | 'font' | 'line' | 'margin' }) =
     return (
       <svg viewBox="0 0 24 24" aria-hidden="true">
         <path d="M5 7h14M5 12h14M5 17h14" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+      </svg>
+    );
+  }
+  if (kind === 'header') {
+    return (
+      <svg viewBox="0 0 24 24" aria-hidden="true">
+        <path d="M8 6h8M6 11h12M4 16h16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+        <path d="M12 4v2" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
       </svg>
     );
   }
@@ -1139,6 +1149,17 @@ export function ResumeForm({ apiBaseUrl, templates }: { apiBaseUrl: string; temp
                       {t.name}
                     </option>
                   ))}
+                </select>
+              </span>
+            </label>
+            <label className="tool-field v3-tool" data-tip="基本信息排版" title="基本信息排版">
+              <span className="field-with-icon v3-field">
+                <span className="tool-icon in-field">
+                  <ToolIcon kind="header" />
+                </span>
+                <select className="comic-input with-icon v3-select" value={layout.headerStyle} onChange={(e) => setLayout((v) => ({ ...v, headerStyle: e.target.value === 'centered' ? 'centered' : 'default' }))}>
+                  <option value="default">基本信息：默认</option>
+                  <option value="centered">基本信息：居中</option>
                 </select>
               </span>
             </label>

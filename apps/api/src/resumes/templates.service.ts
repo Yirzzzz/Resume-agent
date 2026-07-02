@@ -5,6 +5,7 @@ type LayoutOptions = {
   pageMarginMm?: number;
   bodyFontSizePt?: number;
   lineHeight?: number;
+  headerStyle?: 'default' | 'centered';
   accentColor?: string;
   fontFamily?: string;
   sectionTitles?: {
@@ -91,6 +92,12 @@ export class TemplatesService {
     const educationBlockGapPx = Math.max(2, Math.round(blockGapPx * 0.45));
     const educationListTopPx = Math.max(2, Math.round(blockGapPx * 0.35));
     const educationLineItemGapPx = Math.max(0, Math.round(blockGapPx * 0.15));
+    const headerStyle =
+      layout?.headerStyle === 'centered' ? 'centered' : 'default';
+    const headerBottomGapPx =
+      headerStyle === 'centered'
+        ? Math.max(2, Math.round(blockGapPx * 0.45))
+        : Math.max(3, Math.round(blockGapPx * 0.6));
     const accentColor = layout?.accentColor ?? t.tokens.accentColor;
     const fontFamily = layout?.fontFamily ?? t.tokens.fontFamily;
     const titles = {
@@ -393,29 +400,34 @@ export class TemplatesService {
         return '🔬';
       return '⭐';
     };
+    const metaItemHtml = (icon: string, value: string) =>
+      `<span class="meta-item"><span class="meta-icon">${escapeHtml(icon)}</span><span class="meta-text">${escapeHtml(value)}</span></span>`;
     const headerMetaItems = [
       { icon: contactEmoji('email'), value: resume.basics.email },
       { icon: contactEmoji('phone'), value: resume.basics.phone ?? '' },
       { icon: contactEmoji('location'), value: resume.basics.location ?? '' },
     ]
       .filter((item) => String(item.value ?? '').trim())
-      .map(
-        (item) =>
-          `<span class="meta-item"><span class="meta-icon">${item.icon}</span><span class="meta-text">${escapeHtml(String(item.value))}</span></span>`,
-      )
+      .map((item) => metaItemHtml(item.icon, String(item.value)))
       .join('');
-    const headerExtraItems = (resume.basics.extraInfos ?? [])
+    const headerExtraEntries = (resume.basics.extraInfos ?? [])
       .map((item) => ({
         label: String(item.label ?? '').trim(),
         value: String(item.value ?? '').trim(),
         icon: String(item.icon ?? '').trim(),
       }))
-      .filter((item) => item.label && item.value)
-      .map((item) => {
-        const icon = item.icon || iconFromLabel(item.label);
-        return `<span class="meta-item"><span class="meta-icon">${escapeHtml(icon)}</span><span class="meta-text">${escapeHtml(item.label)}：${escapeHtml(item.value)}</span></span>`;
-      })
-      .join('');
+      .filter((item) => item.label && item.value);
+    const extraItemHtml = (item: (typeof headerExtraEntries)[number]) => {
+      const icon = item.icon || iconFromLabel(item.label);
+      return metaItemHtml(icon, `${item.label}：${item.value}`);
+    };
+    const headerExtraItems = headerExtraEntries.map(extraItemHtml).join('');
+    const centeredExtraRows: string[] = [];
+    headerExtraEntries.slice(0, 4).forEach((item, index) => {
+      const rowIndex = Math.floor(index / 2);
+      centeredExtraRows[rowIndex] =
+        `${centeredExtraRows[rowIndex] ?? ''}${extraItemHtml(item)}`;
+    });
     const normalizedPhoto = String(resume.basics.photo ?? '').trim();
     const photoSrc =
       normalizedPhoto.startsWith('data:image/') ||
@@ -426,10 +438,18 @@ export class TemplatesService {
     const headerPhoto = photoSrc
       ? `<div class="avatar-wrap"><img class="avatar" src="${escapeHtml(photoSrc)}" alt="profile photo" /></div>`
       : '';
+    const centeredInfoRows = [headerMetaItems, ...centeredExtraRows]
+      .filter(Boolean)
+      .slice(0, 3)
+      .map((row) => `<div class="meta meta-line">${row}</div>`)
+      .join('');
+    const defaultHeader = `<div class="header"><div class="header-main"><div class="header-info"><h1>${escapeHtml(resume.basics.name)}</h1><div class="meta">${headerMetaItems}</div>${headerExtraItems ? `<div class="meta meta-extra">${headerExtraItems}</div>` : ''}${resume.basics.summary ? `<div class="summary">${formatInline(resume.basics.summary)}</div>` : ''}</div>${headerPhoto}</div></div>`;
+    const centeredHeader = `<div class="header header-centered"><div class="header-centered-layout"><div class="header-slot"></div><div class="header-centered-info"><h1>${escapeHtml(resume.basics.name)}</h1>${centeredInfoRows}${resume.basics.summary ? `<div class="summary">${formatInline(resume.basics.summary)}</div>` : ''}</div>${headerPhoto || '<div class="header-slot"></div>'}</div></div>`;
+    const header = headerStyle === 'centered' ? centeredHeader : defaultHeader;
 
     const trailingSections = customSections || legacyRows;
     const bodySections = `${legacyEducationBlock}${trailingSections}`;
 
-    return `<!doctype html><html><head><meta charset="utf-8" /><title>${escapeHtml(resume.basics.name)} - Resume</title><style>@page{size:A4;margin:${pageMargin}}body{font-family:${fontFamily};color:${t.tokens.textColor};font-size:${bodyFontSize};line-height:${lineHeight}}h1{margin:0;color:${accentColor};font-size:20pt}h2{margin:${sectionTitleTopPx}px 0 ${sectionTitleBottomPx}px;border-bottom:1px solid #000;color:${accentColor};font-size:12pt}.header{margin-bottom:10px}.header-main{display:flex;justify-content:space-between;align-items:flex-start;gap:14px}.header-info{min-width:0;flex:1 1 auto}.meta{color:#000;font-size:9.5pt;line-height:16px;margin-top:4px;display:flex;flex-wrap:wrap;align-items:center;column-gap:14px;row-gap:4px}.meta-extra{margin-top:4px}.meta-item{display:inline-flex;align-items:center;height:16px;line-height:16px;gap:5px}.meta-text{display:inline-block;line-height:16px}.meta-icon{width:14px;min-width:14px;height:14px;display:inline-flex;align-items:center;justify-content:center;font-family:Apple Color Emoji,Segoe UI Emoji,Noto Color Emoji,sans-serif;font-size:11px;line-height:14px;vertical-align:middle}.avatar-wrap{flex:0 0 auto;border:1px solid #d1d5db;padding:2px;background:#fff}.avatar{width:78px;height:104px;object-fit:cover;display:block}.summary{margin-top:8px}.section-content{padding-left:${sectionContentIndentPx}px}.section-content.no-title{padding-left:0}.block{margin-bottom:${blockGapPx}px}.compact-block{margin-bottom:${compactBlockGapPx}px}.compact-block:last-child{margin-bottom:0}.edu-block{margin-bottom:${educationBlockGapPx}px}.edu-block:last-child{margin-bottom:0}.row{display:flex;justify-content:space-between;align-items:flex-start;gap:12px}.head{min-width:0;flex:1 1 auto}.time{flex:0 0 auto;white-space:nowrap;color:#000}.edu-school{font-weight:700}.edu-meta{font-weight:400}.exp-company{font-weight:700}.exp-role{font-weight:400}.proj-name{font-weight:700}.proj-org{font-weight:400}.muted{color:#000}ul,ol{margin:${listTopPx}px 0 0 ${listOuterIndentPx}px;padding-left:${listMarkerIndentPx}px}li{margin:${lineItemGapPx}px 0}ul.edu-detail,ol.edu-detail{margin-top:${educationListTopPx}px}.edu-detail li{margin:${educationLineItemGapPx}px 0}.line-block{margin-top:${detailTopPx}px}.line-block.edu-detail{margin-top:${educationListTopPx}px}.line-list{margin:${detailLineItemGapPx}px 0 0 ${listOuterIndentPx}px;padding-left:${listMarkerIndentPx}px}.line-list:first-child{margin-top:0}.line-list li{margin:${detailLineItemGapPx}px 0}.line-item{margin:${detailLineItemGapPx}px 0}.line-block .line-item:first-child{margin-top:0}.line-block .line-item:last-child{margin-bottom:0}.edu-detail .line-item{margin:${educationLineItemGapPx}px 0}</style></head><body><div class="header"><div class="header-main"><div class="header-info"><h1>${escapeHtml(resume.basics.name)}</h1><div class="meta">${headerMetaItems}</div>${headerExtraItems ? `<div class="meta meta-extra">${headerExtraItems}</div>` : ''}${resume.basics.summary ? `<div class="summary">${formatInline(resume.basics.summary)}</div>` : ''}</div>${headerPhoto}</div></div>${bodySections}${skills ? `<h2>${titles.skills}</h2><div class="section-content">${formatInline(skills)}</div>` : ''}</body></html>`;
+    return `<!doctype html><html><head><meta charset="utf-8" /><title>${escapeHtml(resume.basics.name)} - Resume</title><style>@page{size:A4;margin:${pageMargin}}body{font-family:${fontFamily};color:${t.tokens.textColor};font-size:${bodyFontSize};line-height:${lineHeight}}h1{margin:0;color:${accentColor};font-size:20pt}h2{margin:${sectionTitleTopPx}px 0 ${sectionTitleBottomPx}px;border-bottom:1px solid #000;color:${accentColor};font-size:12pt}.header{margin-bottom:${headerBottomGapPx}px}.header-main{display:flex;justify-content:space-between;align-items:flex-start;gap:14px}.header-info{min-width:0;flex:1 1 auto}.header-centered{text-align:center}.header-centered-layout{display:grid;grid-template-columns:76px minmax(0,1fr) 76px;align-items:start;column-gap:10px}.header-centered-info{min-width:0}.header-centered h1{line-height:1.15}.header-centered .meta{justify-content:center;flex-wrap:nowrap;column-gap:18px;row-gap:0;margin-top:3px}.header-centered .meta-text{white-space:nowrap}.header-centered .avatar-wrap{justify-self:end}.header-centered .avatar{width:60px;height:80px}.meta{color:#000;font-size:9.5pt;line-height:16px;margin-top:4px;display:flex;flex-wrap:wrap;align-items:center;column-gap:14px;row-gap:4px}.meta-extra{margin-top:4px}.meta-item{display:inline-flex;align-items:center;height:16px;line-height:16px;gap:5px}.meta-text{display:inline-block;line-height:16px}.meta-icon{width:14px;min-width:14px;height:14px;display:inline-flex;align-items:center;justify-content:center;font-family:Apple Color Emoji,Segoe UI Emoji,Noto Color Emoji,sans-serif;font-size:11px;line-height:14px;vertical-align:middle}.avatar-wrap{flex:0 0 auto;border:1px solid #d1d5db;padding:2px;background:#fff}.avatar{width:78px;height:104px;object-fit:cover;display:block}.summary{margin-top:8px}.section-content{padding-left:${sectionContentIndentPx}px}.section-content.no-title{padding-left:0}.block{margin-bottom:${blockGapPx}px}.compact-block{margin-bottom:${compactBlockGapPx}px}.compact-block:last-child{margin-bottom:0}.edu-block{margin-bottom:${educationBlockGapPx}px}.edu-block:last-child{margin-bottom:0}.row{display:flex;justify-content:space-between;align-items:flex-start;gap:12px}.head{min-width:0;flex:1 1 auto}.time{flex:0 0 auto;white-space:nowrap;color:#000}.edu-school{font-weight:700}.edu-meta{font-weight:400}.exp-company{font-weight:700}.exp-role{font-weight:400}.proj-name{font-weight:700}.proj-org{font-weight:400}.muted{color:#000}ul,ol{margin:${listTopPx}px 0 0 ${listOuterIndentPx}px;padding-left:${listMarkerIndentPx}px}li{margin:${lineItemGapPx}px 0}ul.edu-detail,ol.edu-detail{margin-top:${educationListTopPx}px}.edu-detail li{margin:${educationLineItemGapPx}px 0}.line-block{margin-top:${detailTopPx}px}.line-block.edu-detail{margin-top:${educationListTopPx}px}.line-list{margin:${detailLineItemGapPx}px 0 0 ${listOuterIndentPx}px;padding-left:${listMarkerIndentPx}px}.line-list:first-child{margin-top:0}.line-list li{margin:${detailLineItemGapPx}px 0}.line-item{margin:${detailLineItemGapPx}px 0}.line-block .line-item:first-child{margin-top:0}.line-block .line-item:last-child{margin-bottom:0}.edu-detail .line-item{margin:${educationLineItemGapPx}px 0}</style></head><body>${header}${bodySections}${skills ? `<h2>${titles.skills}</h2><div class="section-content">${formatInline(skills)}</div>` : ''}</body></html>`;
   }
 }

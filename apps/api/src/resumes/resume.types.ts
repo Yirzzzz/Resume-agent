@@ -60,6 +60,7 @@ export type ResumeFileConfig = {
     pageMarginMm?: number;
     bodyFontSizePt?: number;
     lineHeight?: number;
+    headerStyle?: 'default' | 'centered';
     accentColor?: string;
     fontFamily?: string;
     sectionTitles?: {

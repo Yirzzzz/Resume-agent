@@ -135,6 +135,7 @@ describe('TemplatesService', () => {
     const html = service.renderHtml(resume, 'modern-cn-001');
 
     expect(html).toContain('h2{margin:5px 0 6px;');
+    expect(html).toContain('.header{margin-bottom:5px}');
     expect(html).toContain('.section-content{padding-left:');
     expect(html).toContain('<h2>教育经历</h2><div class="section-content">');
     expect(html).toContain('<h2>项目经历</h2><div class="section-content">');
@@ -173,5 +174,58 @@ describe('TemplatesService', () => {
     expect(html.match(/class="edu-detail"/g)).toHaveLength(2);
     expect(html).toContain('华侨大学');
     expect(html).toContain('佛山大学');
+  });
+
+  it('renders a centered compact header with at most three info rows', () => {
+    const resume: Resume = {
+      basics: {
+        name: '翁宗标',
+        email: 'yirongzzz@163.com',
+        phone: '13729297970',
+        location: '厦门',
+        photo: 'data:image/png;base64,abc',
+        extraInfos: [
+          { label: '求职状态', value: '随时到岗-实习时长六个月以上' },
+          { label: 'Github', value: 'https://github.com/Yirzzzz' },
+          { label: '意向岗位', value: 'AI 应用算法工程师' },
+          { label: '研究方向', value: '人脸伪造检测； VLA' },
+          { label: '更多', value: '不应进入居中头部第四行' },
+        ],
+      },
+      education: [
+        {
+          school: '华侨大学',
+          degree: '硕士',
+          startDate: '2024.9',
+          endDate: '2027.6',
+        },
+      ],
+    };
+
+    const html = service.renderHtml(resume, 'modern-cn-001', {
+      headerStyle: 'centered',
+    });
+
+    expect(html).toContain('.header{margin-bottom:4px}');
+    expect(html).toContain('.header-centered{text-align:center}');
+    expect(html).toContain(
+      '.header-centered-layout{display:grid;grid-template-columns:76px minmax(0,1fr) 76px;',
+    );
+    expect(html).toContain('.header-centered .avatar{width:60px;height:80px}');
+    expect(html).toContain(
+      '<div class="header header-centered"><div class="header-centered-layout"><div class="header-slot"></div><div class="header-centered-info"><h1>翁宗标</h1>',
+    );
+    expect(html).toContain(
+      '<div class="avatar-wrap"><img class="avatar" src="data:image/png;base64,abc" alt="profile photo" /></div>',
+    );
+    expect(html.match(/class="meta meta-line"/g)).toHaveLength(3);
+    expect(html).toContain('📧');
+    expect(html).toContain('yirongzzz@163.com');
+    expect(html).toContain('求职状态：随时到岗-实习时长六个月以上');
+    expect(html).toContain('Github：https://github.com/Yirzzzz');
+    expect(html).toContain('意向岗位：AI 应用算法工程师');
+    expect(html).toContain('研究方向：人脸伪造检测； VLA');
+    expect(html).not.toContain('不应进入居中头部第四行');
+    expect(html).not.toContain('<div class="header"><div class="header-main">');
   });
 });

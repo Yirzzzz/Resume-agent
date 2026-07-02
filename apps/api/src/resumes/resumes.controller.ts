@@ -121,6 +121,7 @@ export class ResumesController {
         pageMarginMm?: number;
         bodyFontSizePt?: number;
         lineHeight?: number;
+        headerStyle?: 'default' | 'centered';
         accentColor?: string;
         fontFamily?: string;
         sectionTitles?: {
@@ -195,9 +196,10 @@ export class ResumesController {
       : body.resumeFileId
         ? this.resumesService.getFile(body.resumeFileId).data
         : this.resumesService.getDefaultFile().data;
-    const model = String(
-      body.model ?? process.env.INTERVIEW_MODEL ?? 'gpt-4o-mini',
-    ).trim() || 'gpt-4o-mini';
+    const model =
+      String(
+        body.model ?? process.env.INTERVIEW_MODEL ?? 'gpt-4o-mini',
+      ).trim() || 'gpt-4o-mini';
     const language = body.language === 'en' ? 'en' : 'zh';
     const rounds = Math.min(Math.max(Number(body.rounds ?? 6), 3), 12);
     const companyName = String(body.companyName ?? '').trim();
@@ -207,7 +209,9 @@ export class ResumesController {
     const jd = String(body.jobDescription ?? '').trim();
     const projectContext = this.extractProjectContext(resume);
     if (projectContext.length === 0) {
-      throw new BadRequestException('当前简历缺少项目经历，无法生成项目面试问题');
+      throw new BadRequestException(
+        '当前简历缺少项目经历，无法生成项目面试问题',
+      );
     }
 
     const endpoint = `${baseUrl}/chat/completions`;
@@ -364,13 +368,17 @@ JSON 格式如下：
     const parsed = this.tryParseJson(content);
     if (parsed) return this.normalizeInterviewPayload(parsed, interviewRole);
     return {
-      opening: language === 'en' ? 'Mock interview started.' : '模拟面试已开始。',
-      interviewRole: interviewRole || (language === 'en' ? 'Software Engineer' : '技术岗位'),
+      opening:
+        language === 'en' ? 'Mock interview started.' : '模拟面试已开始。',
+      interviewRole:
+        interviewRole || (language === 'en' ? 'Software Engineer' : '技术岗位'),
       questions: [
         {
           question: content,
           focus:
-            language === 'en' ? 'Model raw output fallback' : '模型原始输出兜底',
+            language === 'en'
+              ? 'Model raw output fallback'
+              : '模型原始输出兜底',
           followUp: '',
           expectedAnswer:
             language === 'en'
@@ -438,11 +446,13 @@ JSON 格式如下：
       : body.resumeFileId
         ? this.resumesService.getFile(body.resumeFileId).data
         : this.resumesService.getDefaultFile().data;
-    const model = String(
-      body.model ?? process.env.INTERVIEW_MODEL ?? 'gpt-4o-mini',
-    ).trim() || 'gpt-4o-mini';
+    const model =
+      String(
+        body.model ?? process.env.INTERVIEW_MODEL ?? 'gpt-4o-mini',
+      ).trim() || 'gpt-4o-mini';
     const jd = String(body.jobDescription ?? '').trim();
-    const targetPosition = String(body.targetPosition ?? '').trim() || '目标岗位';
+    const targetPosition =
+      String(body.targetPosition ?? '').trim() || '目标岗位';
 
     const endpoint = `${baseUrl}/chat/completions`;
     const systemPrompt =
@@ -692,9 +702,7 @@ ${JSON.stringify(targets, null, 2)}
           )
         : [];
     const deltaKeys =
-      firstChoice &&
-      firstChoice.delta &&
-      typeof firstChoice.delta === 'object'
+      firstChoice && firstChoice.delta && typeof firstChoice.delta === 'object'
         ? Object.keys(firstChoice.delta as Record<string, unknown>).slice(0, 12)
         : [];
 
@@ -715,7 +723,9 @@ ${JSON.stringify(targets, null, 2)}
     payload: Record<string, unknown>,
     fallbackRole: string,
   ) {
-    const rawQuestions = Array.isArray(payload.questions) ? payload.questions : [];
+    const rawQuestions = Array.isArray(payload.questions)
+      ? payload.questions
+      : [];
     const questions = rawQuestions
       .map((item) => {
         if (typeof item === 'string') {
@@ -746,7 +756,9 @@ ${JSON.stringify(targets, null, 2)}
     return {
       opening: String(payload.opening ?? '模拟面试已开始。'),
       interviewRole:
-        String(payload.interviewRole ?? '').trim() || fallbackRole || '技术岗位',
+        String(payload.interviewRole ?? '').trim() ||
+        fallbackRole ||
+        '技术岗位',
       questions,
       scoreCriteria: Array.isArray(payload.scoreCriteria)
         ? payload.scoreCriteria.map((x) => String(x).trim()).filter(Boolean)
@@ -765,7 +777,9 @@ ${JSON.stringify(targets, null, 2)}
           description: String(
             (item as Record<string, unknown>).description ?? '',
           ).trim(),
-          highlights: Array.isArray((item as Record<string, unknown>).highlights)
+          highlights: Array.isArray(
+            (item as Record<string, unknown>).highlights,
+          )
             ? ((item as Record<string, unknown>).highlights as unknown[])
                 .map((x) => String(x).trim())
                 .filter(Boolean)
@@ -788,9 +802,10 @@ ${JSON.stringify(targets, null, 2)}
 
     return [...fromProjects, ...fromCustomSections].filter((x) => {
       const description =
-        'description' in x ? String((x as { description?: string }).description ?? '') : '';
+        'description' in x
+          ? String((x as { description?: string }).description ?? '')
+          : '';
       return x.name || x.org || description || (x.highlights?.length ?? 0) > 0;
     });
   }
-
 }

@@ -100,6 +100,7 @@ export class ResumesService {
             pageMarginMm: config.layout.pageMarginMm,
             bodyFontSizePt: config.layout.bodyFontSizePt,
             lineHeight: config.layout.lineHeight,
+            headerStyle: config.layout.headerStyle,
             accentColor: config.layout.accentColor,
             fontFamily: config.layout.fontFamily,
             sectionTitles: config.layout.sectionTitles
