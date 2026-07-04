@@ -1,5 +1,11 @@
 import { Injectable } from '@nestjs/common';
 import {
+  resolveInterviewApiKey,
+  resolveInterviewBaseUrl,
+  resolveInterviewEnableThinking,
+  resolveInterviewModel,
+} from '../llm/interview-provider.config';
+import {
   ExtractedQuestion,
   JdProfile,
   ReadPage,
@@ -29,27 +35,32 @@ export class QuestionExtractorService {
         '',
       );
       const model = this.resolveModel() || 'gpt-4o-mini';
+      const enableThinking = resolveInterviewEnableThinking(baseUrl);
+      const body: Record<string, unknown> = {
+        model,
+        temperature: 0.1,
+        messages: [
+          {
+            role: 'system',
+            content:
+              '你是面经信息抽取器。只从原文抽取真实出现或明确暗示的问题。无信息返回空数组。只返回JSON。',
+          },
+          {
+            role: 'user',
+            content: `JD关键词：${profile.technicalKeywords.join(', ')}\n网页正文：${page.content.slice(0, 8000)}\n输出JSON: {"questions":[{"question":"", "type":"technical|project|algorithm|hr|system_design|unknown","topic":"","evidence":"","confidence":0.0,"jdKeywordsMatched":[""]}]}`,
+          },
+        ],
+      };
+      if (enableThinking !== undefined) {
+        body.enable_thinking = enableThinking;
+      }
       const resp = await fetch(`${baseUrl}/chat/completions`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${apiKey}`,
         },
-        body: JSON.stringify({
-          model,
-          temperature: 0.1,
-          messages: [
-            {
-              role: 'system',
-              content:
-                '你是面经信息抽取器。只从原文抽取真实出现或明确暗示的问题。无信息返回空数组。只返回JSON。',
-            },
-            {
-              role: 'user',
-              content: `JD关键词：${profile.technicalKeywords.join(', ')}\n网页正文：${page.content.slice(0, 8000)}\n输出JSON: {"questions":[{"question":"", "type":"technical|project|algorithm|hr|system_design|unknown","topic":"","evidence":"","confidence":0.0,"jdKeywordsMatched":[""]}]}`,
-            },
-          ],
-        }),
+        body: JSON.stringify(body),
       });
       if (!resp.ok) return [];
       const data = (await resp.json()) as Record<string, unknown>;
@@ -172,20 +183,14 @@ export class QuestionExtractorService {
   }
 
   private resolveApiKey(): string {
-    return String(
-      process.env.OPENAI_API_KEY ?? process.env.INTERVIEW_API_KEY ?? '',
-    ).trim();
+    return resolveInterviewApiKey();
   }
 
   private resolveBaseUrl(): string {
-    return String(
-      process.env.OPENAI_BASE_URL ?? process.env.INTERVIEW_BASE_URL ?? '',
-    ).trim();
+    return resolveInterviewBaseUrl(undefined, '');
   }
 
   private resolveModel(): string {
-    return String(
-      process.env.OPENAI_MODEL ?? process.env.INTERVIEW_MODEL ?? '',
-    ).trim();
+    return resolveInterviewModel(undefined, '');
   }
 }

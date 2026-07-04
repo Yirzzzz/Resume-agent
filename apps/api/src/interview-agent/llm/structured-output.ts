@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import type { ZodSchema } from 'zod';
+import type { ZodType, ZodTypeDef } from 'zod';
 import { LlmClientService } from './llm-client.service';
 import type { LlmBudget } from './llm-budget';
 
@@ -35,7 +35,7 @@ export class StructuredOutputService {
   async callStructured<T>(params: {
     system: string;
     prompt: string;
-    schema: ZodSchema<T>;
+    schema: ZodType<T, ZodTypeDef, unknown>;
     promptVersion: string;
     budget?: LlmBudget;
     temperature?: number;
@@ -53,7 +53,7 @@ export class StructuredOutputService {
         params,
         new LlmContentError(
           'no_provider',
-          '未配置 LLM 服务（INTERVIEW_API_KEY / OPENAI_API_KEY）',
+          '未配置 LLM 服务（INTERVIEW_API_KEY / DASHSCOPE_API_KEY / OPENAI_API_KEY）',
         ),
       );
     }
@@ -82,7 +82,10 @@ export class StructuredOutputService {
       error: first.error,
     });
     if (first.value !== null && first.value !== undefined) return first.value;
-    if (first.error === 'llm_unavailable' || (params.budget && !params.budget.canSpend())) {
+    if (
+      first.error?.startsWith('llm_unavailable') ||
+      (params.budget && !params.budget.canSpend())
+    ) {
       return this.settle(
         params,
         new LlmContentError(
@@ -124,7 +127,7 @@ export class StructuredOutputService {
   private async tryCall<T>(params: {
     system: string;
     prompt: string;
-    schema: ZodSchema<T>;
+    schema: ZodType<T, ZodTypeDef, unknown>;
     temperature?: number;
   }): Promise<{
     value: T | null;
@@ -140,7 +143,16 @@ export class StructuredOutputService {
       ],
       temperature: params.temperature,
     });
-    if (!result) return { value: null, error: 'llm_unavailable' };
+    if (!result) {
+      const detail =
+        typeof this.llm.getLastError === 'function'
+          ? this.llm.getLastError()
+          : undefined;
+      return {
+        value: null,
+        error: detail ? `llm_unavailable: ${detail}` : 'llm_unavailable',
+      };
+    }
     const parsedJson = this.tryParseJson(result.content);
     if (parsedJson === null) {
       return {

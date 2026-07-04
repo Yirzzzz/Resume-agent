@@ -13,6 +13,11 @@ import {
 } from '@nestjs/common';
 import type { Response } from 'express';
 import { chromium } from 'playwright';
+import {
+  resolveInterviewApiKey,
+  resolveInterviewBaseUrl,
+  resolveInterviewModel,
+} from '../llm/interview-provider.config';
 import { ResumesService } from './resumes.service';
 import { TemplatesService } from './templates.service';
 import type { Resume, ResumeFileConfig } from './resume.types';
@@ -171,23 +176,11 @@ export class ResumesController {
       rounds?: number;
     },
   ) {
-    const baseUrl = String(
-      body.baseUrl ??
-        process.env.INTERVIEW_BASE_URL ??
-        process.env.OPENAI_BASE_URL ??
-        '',
-    )
-      .trim()
-      .replace(/\/+$/, '');
-    const apiKey = String(
-      body.apiKey ??
-        process.env.INTERVIEW_API_KEY ??
-        process.env.OPENAI_API_KEY ??
-        '',
-    ).trim();
+    const baseUrl = resolveInterviewBaseUrl(body.baseUrl, '');
+    const apiKey = resolveInterviewApiKey(body.apiKey);
     if (!baseUrl || !apiKey) {
       throw new BadRequestException(
-        '缺少模型配置：请在服务端配置 INTERVIEW_BASE_URL / INTERVIEW_API_KEY（或 OPENAI_BASE_URL / OPENAI_API_KEY）',
+        '缺少模型配置：请在服务端配置 INTERVIEW_BASE_URL / INTERVIEW_API_KEY（或 DASHSCOPE_API_KEY / OPENAI_*）',
       );
     }
 
@@ -196,10 +189,7 @@ export class ResumesController {
       : body.resumeFileId
         ? this.resumesService.getFile(body.resumeFileId).data
         : this.resumesService.getDefaultFile().data;
-    const model =
-      String(
-        body.model ?? process.env.INTERVIEW_MODEL ?? 'gpt-4o-mini',
-      ).trim() || 'gpt-4o-mini';
+    const model = resolveInterviewModel(body.model);
     const language = body.language === 'en' ? 'en' : 'zh';
     const rounds = Math.min(Math.max(Number(body.rounds ?? 6), 3), 12);
     const companyName = String(body.companyName ?? '').trim();
@@ -421,23 +411,11 @@ JSON 格式如下：
       throw new BadRequestException('一次最多润色 20 个条目');
     }
 
-    const baseUrl = String(
-      body.baseUrl ??
-        process.env.INTERVIEW_BASE_URL ??
-        process.env.OPENAI_BASE_URL ??
-        '',
-    )
-      .trim()
-      .replace(/\/+$/, '');
-    const apiKey = String(
-      body.apiKey ??
-        process.env.INTERVIEW_API_KEY ??
-        process.env.OPENAI_API_KEY ??
-        '',
-    ).trim();
+    const baseUrl = resolveInterviewBaseUrl(body.baseUrl, '');
+    const apiKey = resolveInterviewApiKey(body.apiKey);
     if (!baseUrl || !apiKey) {
       throw new BadRequestException(
-        '缺少模型配置：请在服务端配置 INTERVIEW_BASE_URL / INTERVIEW_API_KEY（或 OPENAI_BASE_URL / OPENAI_API_KEY）',
+        '缺少模型配置：请在服务端配置 INTERVIEW_BASE_URL / INTERVIEW_API_KEY（或 DASHSCOPE_API_KEY / OPENAI_*）',
       );
     }
 
@@ -446,10 +424,7 @@ JSON 格式如下：
       : body.resumeFileId
         ? this.resumesService.getFile(body.resumeFileId).data
         : this.resumesService.getDefaultFile().data;
-    const model =
-      String(
-        body.model ?? process.env.INTERVIEW_MODEL ?? 'gpt-4o-mini',
-      ).trim() || 'gpt-4o-mini';
+    const model = resolveInterviewModel(body.model);
     const jd = String(body.jobDescription ?? '').trim();
     const targetPosition =
       String(body.targetPosition ?? '').trim() || '目标岗位';

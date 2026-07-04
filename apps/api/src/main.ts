@@ -5,6 +5,11 @@ import { existsSync } from 'node:fs';
 import { join } from 'node:path';
 import { json, urlencoded } from 'express';
 import { config as loadEnv } from 'dotenv';
+import {
+  resolveInterviewBaseUrl,
+  resolveInterviewModel,
+} from './llm/interview-provider.config';
+import { interviewAgentConfig } from './interview-agent/config/interview-agent.config';
 
 const envCandidates = [
   join(process.cwd(), '.env'),
@@ -66,11 +71,20 @@ async function bootstrap() {
   const preferredPort = Number(process.env.PORT ?? 3001);
   const port = await resolvePort(preferredPort);
 
-  const hasInterviewBase = Boolean(process.env.INTERVIEW_BASE_URL?.trim());
-  const hasInterviewKey = Boolean(process.env.INTERVIEW_API_KEY?.trim());
-  const interviewModel = process.env.INTERVIEW_MODEL?.trim() || 'gpt-4o-mini';
+  const hasInterviewBase = Boolean(
+    process.env.INTERVIEW_BASE_URL?.trim() ||
+      process.env.DASHSCOPE_BASE_URL?.trim() ||
+      process.env.OPENAI_BASE_URL?.trim(),
+  );
+  const hasInterviewKey = Boolean(
+    process.env.INTERVIEW_API_KEY?.trim() ||
+      process.env.DASHSCOPE_API_KEY?.trim() ||
+      process.env.OPENAI_API_KEY?.trim(),
+  );
+  const interviewModel = resolveInterviewModel();
+  const interviewBaseUrl = resolveInterviewBaseUrl();
   console.log(
-    `[resume-agent-api] env loaded: INTERVIEW_BASE_URL=${hasInterviewBase ? 'yes' : 'no'}, INTERVIEW_API_KEY=${hasInterviewKey ? 'yes' : 'no'}, INTERVIEW_MODEL=${interviewModel}`,
+    `[resume-agent-api] env loaded: interview_base=${hasInterviewBase ? 'yes' : 'default'} (${interviewBaseUrl}), interview_key=${hasInterviewKey ? 'yes' : 'no'}, INTERVIEW_MODEL=${interviewModel}, INTERVIEW_AGENT_LLM_TIMEOUT_MS=${interviewAgentConfig.llmTimeoutMs}`,
   );
 
   await app.listen(port);

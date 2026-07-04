@@ -1,5 +1,11 @@
 import { Injectable } from '@nestjs/common';
 import {
+  resolveInterviewApiKey,
+  resolveInterviewBaseUrl,
+  resolveInterviewEnableThinking,
+  resolveInterviewModel,
+} from '../llm/interview-provider.config';
+import {
   DeepInterviewQuestion,
   DeepInterviewResult,
   InterviewSearchInput,
@@ -133,6 +139,7 @@ export class DeepInterviewComposerService {
       const baseUrl = this.resolveBaseUrl().replace(/\/+$/, '');
       const model = this.resolveModel();
       const endpoint = `${baseUrl}/chat/completions`;
+      const enableThinking = resolveInterviewEnableThinking(baseUrl);
       const prompt = `
 你是资深技术面试官。你的任务是：
 - 先学习“候选问题池”里的出题逻辑（关注点、追问路径、评估方式），
@@ -179,26 +186,31 @@ export class DeepInterviewComposerService {
 }
 `;
 
+      const body: Record<string, unknown> = {
+        model,
+        temperature: 0.35,
+        messages: [
+          {
+            role: 'system',
+            content: '你是面试题生成器，只返回JSON。',
+          },
+          {
+            role: 'user',
+            content: prompt,
+          },
+        ],
+      };
+      if (enableThinking !== undefined) {
+        body.enable_thinking = enableThinking;
+      }
+
       const resp = await fetch(endpoint, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${apiKey}`,
         },
-        body: JSON.stringify({
-          model,
-          temperature: 0.35,
-          messages: [
-            {
-              role: 'system',
-              content: '你是面试题生成器，只返回JSON。',
-            },
-            {
-              role: 'user',
-              content: prompt,
-            },
-          ],
-        }),
+        body: JSON.stringify(body),
       });
       if (!resp.ok) return null;
       const data = (await resp.json()) as Record<string, unknown>;
@@ -496,21 +508,15 @@ export class DeepInterviewComposerService {
   }
 
   private resolveApiKey(): string {
-    return String(
-      process.env.OPENAI_API_KEY ?? process.env.INTERVIEW_API_KEY ?? '',
-    ).trim();
+    return resolveInterviewApiKey();
   }
 
   private resolveBaseUrl(): string {
-    return String(
-      process.env.OPENAI_BASE_URL ?? process.env.INTERVIEW_BASE_URL ?? 'https://api.openai.com/v1',
-    ).trim();
+    return resolveInterviewBaseUrl();
   }
 
   private resolveModel(): string {
-    return String(
-      process.env.OPENAI_MODEL ?? process.env.INTERVIEW_MODEL ?? 'gpt-4o-mini',
-    ).trim();
+    return resolveInterviewModel();
   }
 
   private extractTextContent(data: Record<string, unknown>): string {

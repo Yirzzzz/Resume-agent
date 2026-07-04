@@ -57,6 +57,25 @@ describe('StructuredOutputService', () => {
     expect(llm.chatJson).toHaveBeenCalledTimes(1);
   });
 
+  it('includes provider error details when the LLM client exposes them', async () => {
+    const llm = {
+      hasProvider: () => true,
+      chatJson: jest.fn().mockResolvedValue(null),
+      getLastError: () => 'HTTP 400: InvalidParameter: JSON mode rejected',
+    } as unknown as LlmClientService;
+    const service = new StructuredOutputService(llm);
+
+    await expect(
+      service.callStructured({
+        system: 'system',
+        prompt: 'prompt',
+        schema: z.object({ name: z.string() }),
+        promptVersion: 'test/v1',
+      }),
+    ).rejects.toThrow('HTTP 400: InvalidParameter');
+    expect(llm.chatJson).toHaveBeenCalledTimes(1);
+  });
+
   it('throws immediately without calling the LLM when no provider is configured', async () => {
     const chatJson = jest.fn();
     const llm = {

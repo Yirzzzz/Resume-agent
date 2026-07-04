@@ -78,7 +78,7 @@ export class InterviewAgentService {
     // 深度面试的所有内容都由 LLM 生成，没有可用 provider 时诚实拒绝，不降级为模板面试
     if (!this.llm.hasProvider()) {
       throw new ServiceUnavailableException(
-        '深度面试需要 LLM 服务：请配置 INTERVIEW_API_KEY / INTERVIEW_BASE_URL / INTERVIEW_MODEL（或 OPENAI_*）后重试',
+        '深度面试需要 LLM 服务：请配置 INTERVIEW_API_KEY / INTERVIEW_BASE_URL / INTERVIEW_MODEL（或 DASHSCOPE_API_KEY / OPENAI_*）后重试',
       );
     }
     const input = this.normalizeInput(dto);

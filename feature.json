@@ -114,6 +114,26 @@
               "id": "F-403-P6",
               "name": "长期 Memory 与评测体系",
               "status": "done"
+            },
+            {
+              "id": "F-403-P7",
+              "name": "LLM Provider 兼容与可诊断性（ModelScope / 阿里云百炼 OpenAI compatible）",
+              "status": "done"
+            },
+            {
+              "id": "F-403-P8",
+              "name": "Deep Interview LLM 超时配置生效与百炼长耗时请求稳定性",
+              "status": "done"
+            },
+            {
+              "id": "F-403-P9",
+              "name": "Deep Interview Plan JSON 输出容错（nullable 可选字段规范化）",
+              "status": "done"
+            },
+            {
+              "id": "F-403-P10",
+              "name": "Deep Interview Agent 流程图与数据流文档",
+              "status": "done"
             }
           ]
         }
@@ -177,7 +197,7 @@
     "next_actions": [
       "后续可选：将 P6 A/B checklist 自动化为 eval runner",
       "后续可选：在下一轮 prepare 时读取 long-term memory 生成个性化训练计划",
-      "继续新功能前先确认下一优先级（F-102 / F-103 / F-401）"
+      "继续跑阿里云百炼真实 prepare / start / answer 冒烟，验证文档流程与运行 trace 一致"
     ]
   }
 }

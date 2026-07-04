@@ -1,5 +1,15 @@
 import { z } from 'zod';
 
+const nullableStringToUndefined = z.preprocess(
+  (value) => (value === null ? undefined : value),
+  z.string().optional(),
+);
+
+const nullableStringArrayToEmpty = z.preprocess(
+  (value) => (value === null ? [] : value),
+  z.array(z.string()),
+);
+
 export const interviewPlanSchema = z.object({
   competencyPriorities: z.array(
     z.object({
@@ -8,15 +18,15 @@ export const interviewPlanSchema = z.object({
       targetQuestionCount: z.number(),
     }),
   ),
-  focusProjects: z.array(z.string()),
-  highRiskClaims: z.array(z.string()),
+  focusProjects: nullableStringArrayToEmpty,
+  highRiskClaims: nullableStringArrayToEmpty,
   mainQuestionPool: z.array(
     z.object({
       id: z.string(),
       question: z.string(),
       competencyIds: z.array(z.string()),
-      targetProjectId: z.string().optional(),
-      targetClaimIds: z.array(z.string()),
+      targetProjectId: nullableStringToUndefined,
+      targetClaimIds: nullableStringArrayToEmpty,
       objective: z.string(),
       followUpDirections: z.array(
         z.enum([
@@ -39,7 +49,7 @@ export const interviewPlanSchema = z.object({
           signal: z.string(),
         }),
       ),
-      styleEvidence: z.array(z.string()),
+      styleEvidence: nullableStringArrayToEmpty,
     }),
   ),
   difficultyDistribution: z.object({
