@@ -206,6 +206,278 @@ body {
   color: #fff;
 }
 
+.interview-workspace {
+  display: grid;
+  gap: 10px;
+}
+
+.interview-mode-switch {
+  display: inline-flex;
+  align-items: stretch;
+  width: fit-content;
+  border: 3px solid #111;
+  box-shadow: 4px 4px 0 #111;
+  background: #111;
+  gap: 3px;
+}
+
+.interview-mode-btn {
+  border: 0;
+  background: #fff0b8;
+  color: #111;
+  padding: 8px 14px;
+  font-weight: 900;
+}
+
+.interview-mode-btn.active {
+  background: #e23636;
+  color: #fff;
+}
+
+.deep-interview-panel {
+  background:
+    radial-gradient(circle at 1px 1px, rgba(0, 0, 0, 0.18) 1px, transparent 0),
+    linear-gradient(180deg, #fff5cc 0%, #fff8e8 50%, #eef4ff 100%);
+  background-size: 7px 7px;
+}
+
+.deep-control-row {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.deep-progress-strip {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.deep-progress-strip span {
+  border: 2px solid #111;
+  background: #fff;
+  box-shadow: 2px 2px 0 #111;
+  padding: 4px 8px;
+  font-weight: 900;
+}
+
+.deep-chat-stage {
+  display: grid;
+  grid-template-rows: auto minmax(320px, 1fr) auto;
+  min-height: 620px;
+}
+
+.deep-chat-list {
+  display: grid;
+  align-content: start;
+  gap: 10px;
+  max-height: 460px;
+  overflow: auto;
+  padding: 2px 4px 10px 0;
+}
+
+.deep-chat-row {
+  border: 3px solid #111;
+  box-shadow: 4px 4px 0 #111;
+  padding: 9px;
+  background: #fffef8;
+}
+
+.deep-chat-row.interviewer {
+  background: linear-gradient(180deg, #fff0b8 0%, #fff9df 100%);
+}
+
+.deep-chat-row.candidate {
+  background: linear-gradient(180deg, #dce7ff 0%, #f1f6ff 100%);
+  margin-left: 34px;
+}
+
+.deep-chat-row.system {
+  background: #111;
+  color: #fff;
+  box-shadow: 4px 4px 0 #e23636;
+}
+
+.deep-chat-role {
+  display: inline-block;
+  border: 2px solid #111;
+  background: #ffd84d;
+  color: #111;
+  padding: 1px 8px;
+  margin-bottom: 6px;
+  font-size: 12px;
+  font-weight: 900;
+}
+
+.deep-chat-row.system .deep-chat-role {
+  border-color: #fff;
+  background: #e23636;
+  color: #fff;
+}
+
+.deep-chat-text {
+  font-weight: 750;
+  line-height: 1.55;
+  white-space: pre-wrap;
+}
+
+.deep-answer-box {
+  border-top: 3px solid #111;
+  padding-top: 10px;
+  display: grid;
+  gap: 8px;
+}
+
+.deep-answer-input {
+  min-height: 128px;
+  resize: vertical;
+}
+
+.deep-answer-btn {
+  justify-self: end;
+  background: #2b59ff;
+}
+
+.deep-report-card {
+  border: 3px solid #111;
+  background: linear-gradient(180deg, #fff7d8 0%, #fffef7 100%);
+  box-shadow: 5px 5px 0 #111;
+  padding: 10px;
+}
+
+.deep-report-summary {
+  font-weight: 800;
+  line-height: 1.5;
+  margin: 4px 0 10px;
+}
+
+.deep-report-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.deep-report-grid > div,
+.deep-report-section {
+  border: 2px solid #111;
+  background: #fff;
+  padding: 8px;
+}
+
+.deep-report-title {
+  display: inline-block;
+  border: 2px solid #111;
+  background: #ffd84d;
+  padding: 1px 8px;
+  margin-bottom: 6px;
+  font-weight: 900;
+}
+
+.deep-report-card ul {
+  margin: 0 0 0 18px;
+  padding: 0;
+  font-weight: 700;
+}
+
+.deep-report-section {
+  margin-top: 8px;
+}
+
+.deep-report-pills {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.deep-report-pills span {
+  border: 2px solid #111;
+  background: #dce7ff;
+  padding: 3px 7px;
+  font-weight: 800;
+  box-shadow: 2px 2px 0 #111;
+}
+
+.deep-claim-list {
+  display: grid;
+  gap: 6px;
+}
+
+.deep-claim-item {
+  display: grid;
+  gap: 3px;
+  border-left: 4px solid #111;
+  background: #fff8df;
+  padding: 6px 8px;
+  font-weight: 700;
+}
+
+.deep-claim-item b {
+  color: #e23636;
+}
+
+.deep-memory-card {
+  border: 3px solid #111;
+  background: linear-gradient(180deg, #e7f0ff 0%, #fffef7 100%);
+  box-shadow: 5px 5px 0 #111;
+  padding: 10px;
+}
+
+.deep-memory-list {
+  display: grid;
+  gap: 8px;
+}
+
+.deep-memory-item {
+  border: 2px solid #111;
+  background: #fff;
+  box-shadow: 3px 3px 0 #111;
+  padding: 8px;
+}
+
+.deep-memory-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 6px;
+}
+
+.deep-memory-head span {
+  border: 2px solid #111;
+  background: #ffd84d;
+  padding: 2px 8px;
+  font-size: 12px;
+  font-weight: 900;
+}
+
+.deep-memory-delete {
+  border: 2px solid #111;
+  background: #fff;
+  box-shadow: 2px 2px 0 #111;
+  padding: 2px 8px;
+  font-size: 12px;
+  font-weight: 900;
+}
+
+.deep-memory-delete:disabled {
+  opacity: 0.55;
+}
+
+.deep-memory-item p {
+  margin: 0;
+  font-weight: 800;
+  line-height: 1.5;
+}
+
+.deep-memory-meta,
+.deep-memory-empty {
+  margin-top: 6px;
+  color: #333;
+  font-size: 12px;
+  font-weight: 800;
+}
+
 .comic-error {
   border: 2px solid #111;
   background: #ffe2de;

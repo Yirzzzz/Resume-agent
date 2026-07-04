@@ -29,5 +29,15 @@ import { WebSearchService } from './web-search.service';
     RankerService,
     ReportGeneratorService,
   ],
+  exports: [
+    InterviewSearchService,
+    JdParserService,
+    SearchPlannerService,
+    WebSearchService,
+    PageReaderService,
+    QuestionExtractorService,
+    DedupClusterService,
+    RankerService,
+  ],
 })
 export class InterviewSearchModule {}

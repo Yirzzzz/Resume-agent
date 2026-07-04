@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { InterviewSimulator } from './interview-simulator';
+import { InterviewWorkspace } from './interview-workspace';
 import { ResumeForm } from './resume-form';
 
 type Template = {
@@ -41,9 +41,8 @@ export function WorkspaceTabs({
       {tab === 'editor' ? (
         <ResumeForm apiBaseUrl={apiBaseUrl} templates={templates} />
       ) : (
-        <InterviewSimulator apiBaseUrl={apiBaseUrl} />
+        <InterviewWorkspace apiBaseUrl={apiBaseUrl} />
       )}
     </div>
   );
 }
-
