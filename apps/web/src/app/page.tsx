@@ -4,6 +4,8 @@ type Template = {
   id: string;
   name: string;
   description: string;
+  layout?: string;
+  tokens?: { accentColor?: string };
 };
 
 async function getTemplates(baseUrl: string): Promise<Template[]> {

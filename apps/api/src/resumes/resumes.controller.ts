@@ -12,7 +12,7 @@ import {
   Res,
 } from '@nestjs/common';
 import type { Response } from 'express';
-import { chromium } from 'playwright';
+import { chromium, type Browser } from 'playwright';
 import {
   resolveInterviewApiKey,
   resolveInterviewBaseUrl,
@@ -22,12 +22,50 @@ import { ResumesService } from './resumes.service';
 import { TemplatesService } from './templates.service';
 import type { Resume, ResumeFileConfig } from './resume.types';
 
+type ExportLayoutBody = {
+  pageMarginMm?: number;
+  bodyFontSizePt?: number;
+  lineHeight?: number;
+  headerStyle?: 'default' | 'centered';
+  accentColor?: string;
+  fontFamily?: string;
+  sectionTitles?: {
+    experience?: string;
+    projects?: string;
+    education?: string;
+    skills?: string;
+  };
+};
+
 @Controller()
 export class ResumesController {
+  /** 复用的无头浏览器实例：懒启动，进程退出时关闭（避免每次导出冷启动 Chromium） */
+  private browserPromise: Promise<Browser> | null = null;
+
   constructor(
     private readonly resumesService: ResumesService,
     private readonly templatesService: TemplatesService,
   ) {}
+
+  private async getBrowser(): Promise<Browser> {
+    if (!this.browserPromise) {
+      this.browserPromise = chromium.launch({ headless: true });
+    }
+    const browser = await this.browserPromise;
+    if (!browser.isConnected()) {
+      this.browserPromise = chromium.launch({ headless: true });
+      return this.browserPromise;
+    }
+    return browser;
+  }
+
+  async onModuleDestroy() {
+    if (this.browserPromise) {
+      const browser = await this.browserPromise.catch(() => null);
+      await browser?.close().catch(() => undefined);
+      this.browserPromise = null;
+    }
+  }
 
   // ---- Backward-compatible legacy routes ----
   @Post('resumes')
@@ -115,6 +153,25 @@ export class ResumesController {
     return this.templatesService.list();
   }
 
+  /** 实时预览：与 PDF 导出共用同一渲染器，直接返回 HTML（无需起浏览器） */
+  @Post('export/html')
+  @Header('Content-Type', 'text/html; charset=utf-8')
+  exportHtml(
+    @Body()
+    body: {
+      resume: unknown;
+      templateId?: string;
+      layout?: ExportLayoutBody;
+    },
+  ) {
+    const resume = this.resumesService.ensureValidResume(body.resume);
+    return this.templatesService.renderHtml(
+      resume,
+      body.templateId ?? 'modern-cn-001',
+      body.layout,
+    );
+  }
+
   @Post('export/pdf')
   @Header('Content-Type', 'application/pdf')
   async exportPdf(
@@ -122,20 +179,7 @@ export class ResumesController {
     body: {
       resume: unknown;
       templateId?: string;
-      layout?: {
-        pageMarginMm?: number;
-        bodyFontSizePt?: number;
-        lineHeight?: number;
-        headerStyle?: 'default' | 'centered';
-        accentColor?: string;
-        fontFamily?: string;
-        sectionTitles?: {
-          experience?: string;
-          projects?: string;
-          education?: string;
-          skills?: string;
-        };
-      };
+      layout?: ExportLayoutBody;
     },
     @Res() res: Response,
   ) {
@@ -146,17 +190,19 @@ export class ResumesController {
       body.layout,
     );
 
-    const browser = await chromium.launch({ headless: true });
+    const browser = await this.getBrowser();
     const page = await browser.newPage();
-    await page.setContent(html, { waitUntil: 'networkidle' });
-    const pdf = await page.pdf({ format: 'A4', printBackground: true });
-    await browser.close();
-
-    res.setHeader(
-      'Content-Disposition',
-      'attachment; filename="resume-preview.pdf"',
-    );
-    return res.send(pdf);
+    try {
+      await page.setContent(html, { waitUntil: 'networkidle' });
+      const pdf = await page.pdf({ format: 'A4', printBackground: true });
+      res.setHeader(
+        'Content-Disposition',
+        'attachment; filename="resume-preview.pdf"',
+      );
+      return res.send(pdf);
+    } finally {
+      await page.close().catch(() => undefined);
+    }
   }
 
   @Post('interview/simulate')

@@ -8,6 +8,8 @@ type Template = {
   id: string;
   name: string;
   description: string;
+  layout?: string;
+  tokens?: { accentColor?: string };
 };
 
 export function WorkspaceTabs({

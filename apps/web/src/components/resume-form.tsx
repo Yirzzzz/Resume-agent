@@ -7,10 +7,18 @@ import {
   useRef,
   useState,
   type ChangeEvent,
-  type KeyboardEvent,
 } from 'react';
+import { MarkdownTextarea } from './markdown-textarea';
+import { TemplatePicker } from './template-picker';
+import { moveTo, useDragSort } from './use-drag-sort';
 
-type Template = { id: string; name: string; description: string };
+type Template = {
+  id: string;
+  name: string;
+  description: string;
+  layout?: string;
+  tokens?: { accentColor?: string };
+};
 type Entry = { title: string; org: string; period: string; bullets: string };
 type Section = { id: string; title: string; enabled: boolean; items: Entry[] };
 
@@ -281,37 +289,6 @@ function moveByStep<T>(list: T[], fromIdx: number, step: -1 | 1): T[] {
   return next;
 }
 
-function applyTextStyleShortcut(
-  e: KeyboardEvent<HTMLTextAreaElement>,
-  value: string,
-  onChange: (next: string) => void,
-) {
-  if (!(e.ctrlKey || e.metaKey)) return;
-  const key = e.key.toLowerCase();
-
-  let marker = '';
-  if (key === 'b') marker = '**';
-  if (key === 'i') marker = '*';
-  if (key === 'u') marker = '__';
-  if (!marker) return;
-
-  e.preventDefault();
-
-  const el = e.currentTarget;
-  const start = el.selectionStart ?? 0;
-  const end = el.selectionEnd ?? start;
-  const selected = value.slice(start, end);
-  const wrapped = `${marker}${selected}${marker}`;
-  const next = `${value.slice(0, start)}${wrapped}${value.slice(end)}`;
-  onChange(next);
-
-  requestAnimationFrame(() => {
-    const selectionStart = start + marker.length;
-    const selectionEnd = selectionStart + selected.length;
-    el.setSelectionRange(selectionStart, selectionEnd);
-  });
-}
-
 function createDefaultSections(): Section[] {
   return [
     {
@@ -460,9 +437,12 @@ export function ResumeForm({ apiBaseUrl, templates }: { apiBaseUrl: string; temp
   const [polishError, setPolishError] = useState<string | null>(null);
   const [polishJd, setPolishJd] = useState('');
   const [polishResults, setPolishResults] = useState<Record<string, PolishResultItem>>({});
-  const [previewMode, setPreviewMode] = useState<'pdf' | 'polish'>('pdf');
+  const [previewMode, setPreviewMode] = useState<'live' | 'pdf' | 'polish'>('live');
+  const [liveHtml, setLiveHtml] = useState('');
   const [polishSelectedSnapshot, setPolishSelectedSnapshot] = useState<PolishTarget[]>([]);
   const [activePolishTargetId, setActivePolishTargetId] = useState('');
+
+  const dragSort = useDragSort();
 
   const enabledSections = sections.filter((s) => s.enabled);
   const polishTargets = useMemo<PolishTarget[]>(() => {
@@ -896,20 +876,29 @@ export function ResumeForm({ apiBaseUrl, templates }: { apiBaseUrl: string; temp
     }
   }, [apiBaseUrl]);
 
+  // 实时预览：编辑内容/模板/布局变化 → 防抖 600ms → 拉取渲染 HTML（与 PDF 同一渲染器）
   useEffect(() => {
     if (loadedVersion === 0) return;
-    const timer = setTimeout(() => {
-      void generatePreviewPdf();
-    }, 0);
-    return () => clearTimeout(timer);
-  }, [loadedVersion, generatePreviewPdf]);
-
-  useEffect(() => {
-    const timer = setInterval(() => {
-      void generatePreviewPdf();
-    }, 60000);
-    return () => clearInterval(timer);
-  }, [generatePreviewPdf]);
+    const controller = new AbortController();
+    const timer = setTimeout(async () => {
+      try {
+        const res = await fetch(`${apiBaseUrl}/export/html`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ resume: resumePayload, templateId, layout }),
+          signal: controller.signal,
+        });
+        if (!res.ok) return; // 预览失败静默，不打断编辑
+        setLiveHtml(await res.text());
+      } catch {
+        // 防抖竞态中止或网络抖动：忽略
+      }
+    }, 600);
+    return () => {
+      clearTimeout(timer);
+      controller.abort();
+    };
+  }, [resumePayload, templateId, layout, loadedVersion, apiBaseUrl]);
 
   useEffect(
     () => () => {
@@ -1138,20 +1127,18 @@ export function ResumeForm({ apiBaseUrl, templates }: { apiBaseUrl: string; temp
       <div className="top-toolbar toolbar-v2 comic-panel p-3">
         <div className="toolbar-track">
           <div className="toolbar-left">
-            <label className="tool-field v3-tool" data-tip="选择简历模板风格" title="选择简历模板风格">
+            <div className="tool-field v3-tool" data-tip="选择简历模板版式" title="选择简历模板版式">
               <span className="field-with-icon v3-field">
                 <span className="tool-icon in-field">
                   <ToolIcon kind="template" />
                 </span>
-                <select className="comic-input with-icon v3-select" value={templateId} onChange={(e) => setTemplateId(e.target.value)}>
-                  {templates.map((t) => (
-                    <option key={t.id} value={t.id}>
-                      {t.name}
-                    </option>
-                  ))}
-                </select>
+                <TemplatePicker
+                  templates={templates}
+                  value={templateId}
+                  onChange={setTemplateId}
+                />
               </span>
-            </label>
+            </div>
             <label className="tool-field v3-tool" data-tip="基本信息排版" title="基本信息排版">
               <span className="field-with-icon v3-field">
                 <span className="tool-icon in-field">
@@ -1163,18 +1150,42 @@ export function ResumeForm({ apiBaseUrl, templates }: { apiBaseUrl: string; temp
                 </select>
               </span>
             </label>
-            <label className="tool-field v3-tool" data-tip="主题色：控制标题字体颜色" title="主题色：控制标题字体颜色">
+            <label className="tool-field v3-tool" data-tip="主题色：预设或右侧任意取色" title="主题色：预设或右侧任意取色">
               <span className="field-with-icon v3-field">
                 <span className="tool-icon in-field">
                   <ToolIcon kind="template" />
                 </span>
-                <select className="comic-input with-icon v3-select" value={layout.accentColor} onChange={(e) => setLayout((v) => ({ ...v, accentColor: e.target.value }))}>
+                <select
+                  className="comic-input with-icon v3-select"
+                  value={
+                    ['#1f4f8f', '#b42318', '#0f766e', '#6b21a8', '#1f2937'].includes(
+                      layout.accentColor,
+                    )
+                      ? layout.accentColor
+                      : 'custom'
+                  }
+                  onChange={(e) => {
+                    if (e.target.value === 'custom') return;
+                    setLayout((v) => ({ ...v, accentColor: e.target.value }));
+                  }}
+                >
                   <option value="#1f4f8f">深蓝</option>
                   <option value="#b42318">酒红</option>
                   <option value="#0f766e">青绿</option>
                   <option value="#6b21a8">紫罗兰</option>
                   <option value="#1f2937">深灰</option>
+                  <option value="custom">自定义…</option>
                 </select>
+                <input
+                  className="accent-color-input"
+                  type="color"
+                  value={layout.accentColor}
+                  onChange={(e) =>
+                    setLayout((v) => ({ ...v, accentColor: e.target.value }))
+                  }
+                  title="自定义主题色"
+                  aria-label="自定义主题色"
+                />
               </span>
             </label>
             <label className="tool-field v3-tool" data-tip="字体：常用中文简历字体" title="字体：常用中文简历字体">
@@ -1439,14 +1450,10 @@ export function ResumeForm({ apiBaseUrl, templates }: { apiBaseUrl: string; temp
             <button className="tiny-btn" type="button" onClick={() => addExtraInfo()}>
               + 新增自定义信息
             </button>
-            <textarea
-              className="comic-input"
+            <MarkdownTextarea
               rows={3}
               value={summary}
-              onChange={(e) => setSummary(e.target.value)}
-              onKeyDown={(e) =>
-                applyTextStyleShortcut(e, summary, (next) => setSummary(next))
-              }
+              onChange={setSummary}
               placeholder="个人简介"
             />
           </div>
@@ -1454,8 +1461,23 @@ export function ResumeForm({ apiBaseUrl, templates }: { apiBaseUrl: string; temp
           <div className="comic-group">
             <div className="comic-group-title">校园经历</div>
             {educationEntries.map((entry, idx) => (
-              <div key={entry.id} className="entry-box comic-entry-box">
-                <div className="entry-chip">校园经历 {idx + 1}</div>
+              <div
+                key={entry.id}
+                className={`entry-box comic-entry-box${dragSort.isDropTarget('education', idx) ? ' drag-over' : ''}${dragSort.isDragging('education', idx) ? ' dragging' : ''}`}
+                {...dragSort.targetProps('education', idx, (from, to) =>
+                  setEducationEntries((prev) => moveTo(prev, from, to)),
+                )}
+              >
+                <div className="entry-chip">
+                  <span
+                    className="drag-handle"
+                    title="按住拖动调整顺序"
+                    {...dragSort.handleProps('education', idx)}
+                  >
+                    ⠿
+                  </span>
+                  校园经历 {idx + 1}
+                </div>
                 <input
                   className="comic-input"
                   value={entry.school}
@@ -1529,18 +1551,10 @@ export function ResumeForm({ apiBaseUrl, templates }: { apiBaseUrl: string; temp
                   }
                   placeholder="学校标签（如 985/211/双一流）"
                 />
-                <textarea
-                  className="comic-input"
+                <MarkdownTextarea
                   rows={3}
                   value={entry.summary}
-                  onChange={(e) =>
-                    updateEducationEntry(idx, 'summary', e.target.value)
-                  }
-                  onKeyDown={(e) =>
-                    applyTextStyleShortcut(e, entry.summary, (next) =>
-                      updateEducationEntry(idx, 'summary', next),
-                    )
-                  }
+                  onChange={(next) => updateEducationEntry(idx, 'summary', next)}
                   placeholder="这里写你的个人简介，突出方向与成果。"
                 />
                 <div className="flex gap-2">
@@ -1577,9 +1591,22 @@ export function ResumeForm({ apiBaseUrl, templates }: { apiBaseUrl: string; temp
             </button>
           </div>
 
-          {sections.map((section) => (
-            <div key={section.id} className="comic-group">
+          {sections.map((section, sectionIdx) => (
+            <div
+              key={section.id}
+              className={`comic-group${dragSort.isDropTarget('sections', sectionIdx) ? ' drag-over' : ''}${dragSort.isDragging('sections', sectionIdx) ? ' dragging' : ''}`}
+              {...dragSort.targetProps('sections', sectionIdx, (from, to) =>
+                setSections((prev) => moveTo(prev, from, to)),
+              )}
+            >
               <div className="section-head-row">
+                <span
+                  className="drag-handle"
+                  title="按住拖动调整模块顺序"
+                  {...dragSort.handleProps('sections', sectionIdx)}
+                >
+                  ⠿
+                </span>
                 <input className="comic-input" value={section.title} onChange={(e) => updateSection(section.id, { title: e.target.value })} placeholder="模块标题" />
                 <label className="switch-label">
                   <input type="checkbox" checked={section.enabled} onChange={(e) => updateSection(section.id, { enabled: e.target.checked })} /> 显示
@@ -1587,22 +1614,37 @@ export function ResumeForm({ apiBaseUrl, templates }: { apiBaseUrl: string; temp
               </div>
               {section.enabled
                 ? section.items.map((item, idx) => (
-                    <div key={`${section.id}-${idx}`} className="entry-box comic-entry-box">
-                      <div className="entry-chip">第 {idx + 1} 格</div>
+                    <div
+                      key={`${section.id}-${idx}`}
+                      className={`entry-box comic-entry-box${dragSort.isDropTarget(`items-${section.id}`, idx) ? ' drag-over' : ''}${dragSort.isDragging(`items-${section.id}`, idx) ? ' dragging' : ''}`}
+                      {...dragSort.targetProps(`items-${section.id}`, idx, (from, to) =>
+                        setSections((prev) =>
+                          prev.map((s) =>
+                            s.id === section.id
+                              ? { ...s, items: moveTo(s.items, from, to) }
+                              : s,
+                          ),
+                        ),
+                      )}
+                    >
+                      <div className="entry-chip">
+                        <span
+                          className="drag-handle"
+                          title="按住拖动调整条目顺序"
+                          {...dragSort.handleProps(`items-${section.id}`, idx)}
+                        >
+                          ⠿
+                        </span>
+                        第 {idx + 1} 格
+                      </div>
                       <input className="comic-input" value={item.title} onChange={(e) => updateItem(section.id, idx, 'title', e.target.value)} placeholder="标题" />
                       <input className="comic-input" value={item.org} onChange={(e) => updateItem(section.id, idx, 'org', e.target.value)} placeholder="组织" />
                       <input className="comic-input" value={item.period} onChange={(e) => updateItem(section.id, idx, 'period', e.target.value)} placeholder="时间" />
-                      <textarea
-                        className="comic-input"
+                      <MarkdownTextarea
                         rows={3}
                         value={item.bullets}
-                        onChange={(e) => updateItem(section.id, idx, 'bullets', e.target.value)}
-                        onKeyDown={(e) =>
-                          applyTextStyleShortcut(e, item.bullets, (next) =>
-                            updateItem(section.id, idx, 'bullets', next),
-                          )
-                        }
-                        placeholder="每行一个要点"
+                        onChange={(next) => updateItem(section.id, idx, 'bullets', next)}
+                        placeholder="每行一个要点；工具栏可加粗/加列表"
                       />
                       <div className="flex gap-2">
                         <button
@@ -1693,19 +1735,61 @@ export function ResumeForm({ apiBaseUrl, templates }: { apiBaseUrl: string; temp
         </div>
 
         <div className="comic-panel p-4 preview-pane">
-          {previewMode === 'pdf' ? (
+          {previewMode !== 'polish' ? (
             <>
-              <h2 className="comic-title">PDF预览</h2>
-              {previewLoading ? <p className="text-sm">正在生成预览 PDF...</p> : null}
-              <div className="pdf-stage">
-                <div className="pdf-frame-wrap">
-                  {previewUrl ? (
-                    <iframe title="resume-pdf-preview" src={`${previewUrl}#toolbar=0&navpanes=0&view=Fit`} className="pdf-frame" />
-                  ) : (
-                    <div className="pdf-empty">暂无预览</div>
-                  )}
+              <div className="preview-head-row">
+                <h2 className="comic-title">{previewMode === 'live' ? '实时预览' : 'PDF预览'}</h2>
+                <div className="preview-mode-tabs">
+                  <button
+                    className={`tiny-btn ${previewMode === 'live' ? 'active' : ''}`}
+                    type="button"
+                    onClick={() => setPreviewMode('live')}
+                    title="即输即刷的实时排版预览"
+                  >
+                    实时
+                  </button>
+                  <button
+                    className={`tiny-btn ${previewMode === 'pdf' ? 'active' : ''}`}
+                    type="button"
+                    onClick={() => {
+                      setPreviewMode('pdf');
+                      if (!previewUrl) void handleCompilePreview();
+                    }}
+                    title="精确分页的 PDF 预览"
+                  >
+                    PDF
+                  </button>
                 </div>
               </div>
+              {previewMode === 'live' ? (
+                <div className="pdf-stage">
+                  <div className="live-a4-wrap">
+                    {liveHtml ? (
+                      <iframe
+                        title="resume-live-preview"
+                        srcDoc={liveHtml}
+                        className="live-a4-frame"
+                        sandbox=""
+                      />
+                    ) : (
+                      <div className="pdf-empty">输入内容后自动生成预览…</div>
+                    )}
+                  </div>
+                </div>
+              ) : (
+                <>
+                  {previewLoading ? <p className="text-sm">正在生成预览 PDF...</p> : null}
+                  <div className="pdf-stage">
+                    <div className="pdf-frame-wrap">
+                      {previewUrl ? (
+                        <iframe title="resume-pdf-preview" src={`${previewUrl}#toolbar=0&navpanes=0&view=Fit`} className="pdf-frame" />
+                      ) : (
+                        <div className="pdf-empty">暂无预览</div>
+                      )}
+                    </div>
+                  </div>
+                </>
+              )}
             </>
           ) : (
             <div className="polish-preview">
@@ -1730,8 +1814,8 @@ export function ResumeForm({ apiBaseUrl, templates }: { apiBaseUrl: string; temp
                     </select>
                     <span className="polish-select-arrow">▼</span>
                   </div>
-                  <button className="comic-btn alt" type="button" onClick={() => setPreviewMode('pdf')}>
-                    返回PDF
+                  <button className="comic-btn alt" type="button" onClick={() => setPreviewMode('live')}>
+                    返回预览
                   </button>
                 </div>
               </div>

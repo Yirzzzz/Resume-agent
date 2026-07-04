@@ -1767,3 +1767,300 @@ body {
     width: 100%;
   }
 }
+
+/* ===== 简历编辑器升级：markdown 工具栏 / 模板卡片 / 拖拽 / 实时预览（追加） ===== */
+
+.md-editor {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.md-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 6px;
+  background: #fffbe8;
+  border: 2px solid #111;
+  border-bottom: none;
+}
+
+.md-tool-btn {
+  min-width: 26px;
+  height: 24px;
+  padding: 0 7px;
+  font-size: 12px;
+  font-weight: 700;
+  background: #fff;
+  border: 2px solid #111;
+  box-shadow: 2px 2px 0 #111;
+  cursor: pointer;
+}
+
+.md-tool-btn:hover {
+  background: #ffe8bf;
+}
+
+.md-tool-btn:active {
+  transform: translate(1px, 1px);
+  box-shadow: 1px 1px 0 #111;
+}
+
+.md-btn-bold { font-weight: 900; }
+.md-btn-italic { font-style: italic; }
+.md-btn-underline { text-decoration: underline; }
+
+.md-toolbar-hint {
+  margin-left: auto;
+  font-size: 10px;
+  color: #777;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.md-editor textarea.comic-input {
+  margin-top: 0;
+}
+
+/* 模板卡片选择器 */
+.tpl-picker {
+  position: relative;
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+/* 工具栏容器 .v3-field 自带边框与 42px 高度：内嵌触发按钮去边框撑满，与 v3-select 一致 */
+.toolbar-v2 .toolbar-left .v3-field .tpl-picker {
+  height: 100%;
+}
+
+.toolbar-v2 .toolbar-left .v3-field .tpl-picker-trigger {
+  height: 100%;
+  border: 0;
+  box-shadow: none;
+  background: transparent;
+  padding: 0;
+  font-size: 14px;
+}
+
+.tpl-picker-trigger {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+  width: 100%;
+  cursor: pointer;
+  text-align: left;
+}
+
+.tpl-picker-label {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.tpl-picker-pop {
+  /* fixed + JS 定位：工具栏容器 .v3-field 有 overflow:hidden，absolute 会被裁剪 */
+  position: fixed;
+  z-index: 120;
+  width: 340px;
+  max-height: 420px;
+  overflow-y: auto;
+  padding: 8px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  background: #fff;
+}
+
+.tpl-card {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 8px;
+  background: #fff;
+  border: 2px solid #111;
+  box-shadow: 3px 3px 0 #111;
+  cursor: pointer;
+  text-align: left;
+}
+
+.tpl-card:hover {
+  background: #fff7e6;
+}
+
+.tpl-card.active {
+  background: #ffe8bf;
+  box-shadow: 3px 3px 0 var(--accent);
+  border-color: var(--accent);
+}
+
+.tpl-card-name {
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.tpl-card-desc {
+  font-size: 10px;
+  color: #666;
+  line-height: 1.35;
+}
+
+/* 模板迷你缩略图（纯 CSS 示意） */
+.tpl-thumb {
+  display: flex;
+  gap: 4px;
+  height: 74px;
+  padding: 6px;
+  background: #fff;
+  border: 1.5px solid #cfcfcf;
+}
+
+.tpl-thumb-col {
+  flex-direction: column;
+}
+
+.tpl-thumb-bar {
+  display: block;
+  height: 5px;
+  border-radius: 1px;
+  background: #d7d7d7;
+}
+
+.tpl-thumb-bar.w40 { width: 40%; }
+.tpl-thumb-bar.w50 { width: 50%; }
+.tpl-thumb-bar.w60 { width: 60%; }
+.tpl-thumb-bar.w70 { width: 70%; }
+.tpl-thumb-bar.w80 { width: 80%; }
+.tpl-thumb-bar.w90 { width: 90%; }
+.tpl-thumb-bar.w100 { width: 100%; }
+.tpl-thumb-bar.dark { background: #333; }
+
+.tpl-thumb-col .tpl-thumb-bar { margin: 3px 0; }
+
+.tpl-thumb-side {
+  width: 34%;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  padding-right: 4px;
+  border-right: 2px solid;
+}
+
+.tpl-thumb-main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.tpl-thumb-dot {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+}
+
+.tpl-thumb-banner {
+  height: 18px;
+  border-radius: 1px;
+  margin-bottom: 2px;
+}
+
+.tpl-thumb-rail {
+  border-left: 2px solid;
+  padding-left: 7px;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  margin-top: 3px;
+}
+
+.tpl-thumb-hr {
+  display: block;
+  height: 1.5px;
+  width: 100%;
+  background: #111;
+  margin: 2px 0;
+}
+
+/* 拖拽排序 */
+.drag-handle {
+  cursor: grab;
+  user-select: none;
+  padding: 0 6px;
+  font-size: 14px;
+  line-height: 1;
+  color: #555;
+}
+
+.drag-handle:active {
+  cursor: grabbing;
+}
+
+.comic-group.drag-over,
+.entry-box.drag-over {
+  outline: 3px dashed var(--accent);
+  outline-offset: 2px;
+}
+
+.comic-group.dragging,
+.entry-box.dragging {
+  opacity: 0.45;
+}
+
+.entry-chip .drag-handle {
+  margin-right: 2px;
+}
+
+/* 预览面板：实时/PDF 双模式 */
+.preview-head-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.preview-mode-tabs {
+  display: flex;
+  gap: 4px;
+}
+
+.preview-mode-tabs .tiny-btn.active {
+  background: #111;
+  color: #fff;
+}
+
+.live-a4-wrap {
+  width: 100%;
+  height: 100%;
+  min-height: 60vh;
+  background: #e8e8e8;
+  border: 2px solid #111;
+  display: flex;
+  justify-content: center;
+  overflow: auto;
+  padding: 10px;
+}
+
+.live-a4-frame {
+  width: 210mm;
+  max-width: 100%;
+  min-height: 297mm;
+  border: none;
+  background: #fff;
+  box-shadow: 0 3px 14px rgba(0, 0, 0, 0.28);
+}
+
+/* 自定义主题色取色器 */
+.accent-color-input {
+  width: 30px;
+  height: 30px;
+  min-width: 30px;
+  padding: 1px;
+  border: 2px solid #111;
+  background: #fff;
+  cursor: pointer;
+  margin-left: 4px;
+}

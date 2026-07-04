@@ -134,6 +134,7 @@ describe('TemplatesService', () => {
 
     const html = service.renderHtml(resume, 'modern-cn-001');
 
+    expect(html).toContain('h1{margin:0;color:#1f4f8f;font-size:16pt}');
     expect(html).toContain('h2{margin:5px 0 6px;');
     expect(html).toContain('.header{margin-bottom:5px}');
     expect(html).toContain('.section-content{padding-left:');

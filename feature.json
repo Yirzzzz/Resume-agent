@@ -32,7 +32,14 @@
         {
           "id": "F-103",
           "name": "HTML/PDF 渲染导出",
-          "status": "todo"
+          "status": "in_progress",
+          "subfeatures": [
+            {
+              "id": "F-103-P1",
+              "name": "PDF 头部姓名字号收敛",
+              "status": "done"
+            }
+          ]
         }
       ]
     },
@@ -193,11 +200,11 @@
   ],
   "current_focus": {
     "milestone": "M3",
-    "feature": "F-403",
+    "feature": "F-103",
     "next_actions": [
+      "继续观察 PDF 头部信息在默认/居中模式下的版面密度",
       "后续可选：将 P6 A/B checklist 自动化为 eval runner",
-      "后续可选：在下一轮 prepare 时读取 long-term memory 生成个性化训练计划",
-      "继续跑阿里云百炼真实 prepare / start / answer 冒烟，验证文档流程与运行 trace 一致"
+      "后续可选：在下一轮 prepare 时读取 long-term memory 生成个性化训练计划"
     ]
   }
 }
