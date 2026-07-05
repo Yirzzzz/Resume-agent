@@ -92,19 +92,12 @@ export type ResumeFileRecord = ResumeFileSummary & {
   config?: ResumeFileConfig;
 };
 
-export type TemplateLayoutVariant =
-  | 'single-column'
-  | 'dual-column'
-  | 'ats-minimal'
-  | 'color-block'
-  | 'timeline';
-
 export type TemplateDefinition = {
   id: string;
   name: string;
   description: string;
   /** 版式结构（决定 HTML 骨架），tokens 只决定默认风格 */
-  layout: TemplateLayoutVariant;
+  layout: 'single-column';
   tokens: {
     fontFamily: string;
     accentColor: string;

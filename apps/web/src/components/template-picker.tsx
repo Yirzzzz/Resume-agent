@@ -10,63 +10,13 @@ export type TemplateSummary = {
   tokens?: { accentColor?: string };
 };
 
-/** 各版式的纯 CSS 迷你示意图（不依赖图片资源） */
-function TemplateThumb({ layout, accent }: { layout?: string; accent: string }) {
-  if (layout === 'dual-column') {
-    return (
-      <div className="tpl-thumb">
-        <div className="tpl-thumb-side" style={{ borderRightColor: accent }}>
-          <span className="tpl-thumb-dot" style={{ background: accent }} />
-          <span className="tpl-thumb-bar w60" />
-          <span className="tpl-thumb-bar w80" />
-        </div>
-        <div className="tpl-thumb-main">
-          <span className="tpl-thumb-bar w90" style={{ background: accent }} />
-          <span className="tpl-thumb-bar w100" />
-          <span className="tpl-thumb-bar w80" />
-          <span className="tpl-thumb-bar w90" />
-        </div>
-      </div>
-    );
-  }
-  if (layout === 'color-block') {
-    return (
-      <div className="tpl-thumb tpl-thumb-col">
-        <div className="tpl-thumb-banner" style={{ background: accent }} />
-        <span className="tpl-thumb-bar w60" style={{ background: accent }} />
-        <span className="tpl-thumb-bar w100" />
-        <span className="tpl-thumb-bar w90" />
-      </div>
-    );
-  }
-  if (layout === 'timeline') {
-    return (
-      <div className="tpl-thumb tpl-thumb-col">
-        <span className="tpl-thumb-bar w50" style={{ background: accent }} />
-        <div className="tpl-thumb-rail" style={{ borderLeftColor: accent }}>
-          <span className="tpl-thumb-bar w90" />
-          <span className="tpl-thumb-bar w70" />
-          <span className="tpl-thumb-bar w80" />
-        </div>
-      </div>
-    );
-  }
-  if (layout === 'ats-minimal') {
-    return (
-      <div className="tpl-thumb tpl-thumb-col">
-        <span className="tpl-thumb-bar w40 dark" />
-        <span className="tpl-thumb-bar w70" />
-        <span className="tpl-thumb-hr" />
-        <span className="tpl-thumb-bar w100" />
-        <span className="tpl-thumb-bar w90" />
-      </div>
-    );
-  }
+/** Modern CN 的纯 CSS 迷你示意图（不依赖图片资源） */
+function TemplateThumb({ accent }: { accent: string }) {
   return (
     <div className="tpl-thumb tpl-thumb-col">
       <span className="tpl-thumb-bar w50" style={{ background: accent }} />
       <span className="tpl-thumb-bar w80" />
-      <span className="tpl-thumb-bar w40" style={{ background: accent }} />
+      <span className="tpl-thumb-bar w50" style={{ background: accent }} />
       <span className="tpl-thumb-bar w100" />
       <span className="tpl-thumb-bar w90" />
     </div>
@@ -147,10 +97,7 @@ export function TemplatePicker({
                 setOpen(false);
               }}
             >
-              <TemplateThumb
-                layout={t.layout}
-                accent={t.tokens?.accentColor ?? '#1f4f8f'}
-              />
+              <TemplateThumb accent={t.tokens?.accentColor ?? '#1f4f8f'} />
               <div className="tpl-card-info">
                 <div className="tpl-card-name">{t.name}</div>
                 <div className="tpl-card-desc">{t.description}</div>

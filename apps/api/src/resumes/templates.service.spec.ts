@@ -8,6 +8,12 @@ describe('TemplatesService', () => {
     service = new TemplatesService();
   });
 
+  it('only exposes Modern CN as the available template', () => {
+    expect(service.list().map((template) => template.id)).toEqual([
+      'modern-cn-001',
+    ]);
+  });
+
   it('uses compact spacing classes for multi-entry education blocks', () => {
     const resume: Resume = {
       basics: {

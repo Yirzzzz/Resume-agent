@@ -522,7 +522,7 @@ describe('single-column golden regression (refactor must not change output)', ()
     { headerStyle: 'default', bodyFontSizePt: 8.5, lineHeight: 1.0 },
   ];
 
-  it.each(['modern-cn-001', 'classic-en-001'])(
+  it.each(['modern-cn-001'])(
     'matches legacy output for %s across layout variants',
     (templateId) => {
       const t = service.getById(templateId);
@@ -536,22 +536,4 @@ describe('single-column golden regression (refactor must not change output)', ()
       }
     },
   );
-
-  it('new layouts render non-empty, distinct html', () => {
-    const ids = ['dual-column-001', 'ats-001', 'color-block-001', 'timeline-001'];
-    const outputs = ids.map((id) => service.renderHtml(sampleResume, id));
-    for (const html of outputs) {
-      expect(html).toContain('<!doctype html>');
-      expect(html).toContain('张三');
-      // markdown 渲染在所有版式中生效
-      expect(html).toContain('<strong>订单链路</strong>');
-      expect(html).toContain('<li>');
-    }
-    // 四个版式骨架互不相同
-    expect(new Set(outputs).size).toBe(ids.length);
-    // ATS 版式不含 emoji 图标与头像
-    const ats = outputs[1];
-    expect(ats).not.toContain('📧');
-    expect(ats).not.toContain('avatar');
-  });
 });

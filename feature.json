@@ -4,9 +4,9 @@
     "status": "in_progress",
     "owner": "yirz",
     "created_at": "2026-05-24",
-    "last_updated": "2026-07-04"
+    "last_updated": "2026-07-05"
   },
-  "vision": "构建低门槛、可 Web 使用的简历 Agent 平台，具备多模板、智能一页、内容润色与模拟面试能力。",
+  "vision": "构建低门槛、可 Web 使用的简历 Agent 平台，具备 Modern CN 单模板、可控排版、内容润色与模拟面试能力。",
   "principles": [
     "大众化：无需本地复杂安装即可使用",
     "可控：AI 输出结构化、可审计、可回退",
@@ -38,6 +38,11 @@
               "id": "F-103-P1",
               "name": "PDF 头部姓名字号收敛",
               "status": "done"
+            },
+            {
+              "id": "F-103-P11",
+              "name": "模板系统收敛为仅保留 Modern CN",
+              "status": "done"
             }
           ]
         }
@@ -55,8 +60,8 @@
         },
         {
           "id": "F-202",
-          "name": "首批 8-12 套模板",
-          "status": "todo"
+          "name": "Modern CN 单模板维护",
+          "status": "done"
         }
       ]
     },

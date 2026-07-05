@@ -628,7 +628,12 @@ export function ResumeForm({ apiBaseUrl, templates }: { apiBaseUrl: string; temp
       const file = await requestJson<ResumeFileRecord>(`/resume-files/${id}`);
       setActiveFileId(file.id);
       setSwitchTargetId(file.id);
-      const nextTemplateId = file.config?.templateId ?? templates[0]?.id ?? DEFAULT_TEMPLATE_ID;
+      const fallbackTemplateId = templates[0]?.id ?? DEFAULT_TEMPLATE_ID;
+      const savedTemplateId = file.config?.templateId;
+      const nextTemplateId =
+        savedTemplateId && templates.some((template) => template.id === savedTemplateId)
+          ? savedTemplateId
+          : fallbackTemplateId;
       setTemplateId(nextTemplateId);
       setLayout({
         ...DEFAULT_LAYOUT,

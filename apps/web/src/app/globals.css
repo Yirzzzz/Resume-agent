@@ -1929,61 +1929,12 @@ body {
   background: #d7d7d7;
 }
 
-.tpl-thumb-bar.w40 { width: 40%; }
 .tpl-thumb-bar.w50 { width: 50%; }
-.tpl-thumb-bar.w60 { width: 60%; }
-.tpl-thumb-bar.w70 { width: 70%; }
 .tpl-thumb-bar.w80 { width: 80%; }
 .tpl-thumb-bar.w90 { width: 90%; }
 .tpl-thumb-bar.w100 { width: 100%; }
-.tpl-thumb-bar.dark { background: #333; }
 
 .tpl-thumb-col .tpl-thumb-bar { margin: 3px 0; }
-
-.tpl-thumb-side {
-  width: 34%;
-  display: flex;
-  flex-direction: column;
-  gap: 5px;
-  padding-right: 4px;
-  border-right: 2px solid;
-}
-
-.tpl-thumb-main {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  gap: 5px;
-}
-
-.tpl-thumb-dot {
-  width: 14px;
-  height: 14px;
-  border-radius: 50%;
-}
-
-.tpl-thumb-banner {
-  height: 18px;
-  border-radius: 1px;
-  margin-bottom: 2px;
-}
-
-.tpl-thumb-rail {
-  border-left: 2px solid;
-  padding-left: 7px;
-  display: flex;
-  flex-direction: column;
-  gap: 5px;
-  margin-top: 3px;
-}
-
-.tpl-thumb-hr {
-  display: block;
-  height: 1.5px;
-  width: 100%;
-  background: #111;
-  margin: 2px 0;
-}
 
 /* 拖拽排序 */
 .drag-handle {
